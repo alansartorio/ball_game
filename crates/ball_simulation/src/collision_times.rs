@@ -1,12 +1,12 @@
 use nalgebra::Vector2;
 
-use crate::{collision_primitives::segment_ball, Ball, Block, Collision, WallType};
+use crate::{collision_primitives::segment_ball, Ball, Block, Event, WallType};
 
 pub(crate) fn earliest_collision_ball_walls(
     ball: &Ball,
     width: f64,
     height: f64,
-) -> Option<Collision<WallType>> {
+) -> Option<Event<WallType>> {
     let radius = ball.radius;
 
     let time_x = if ball.velocity.x > 0.0 {
@@ -16,7 +16,7 @@ pub(crate) fn earliest_collision_ball_walls(
     } else {
         None
     }
-    .map(|time| Collision {
+    .map(|time| Event {
         time,
         data: WallType::Vertical,
     });
@@ -28,7 +28,7 @@ pub(crate) fn earliest_collision_ball_walls(
     } else {
         None
     }
-    .map(|time| Collision {
+    .map(|time| Event {
         time,
         data: WallType::Horizontal,
     });
@@ -42,7 +42,7 @@ pub(crate) fn earliest_collision_ball_walls(
 pub(crate) fn earliest_collision_ball_block(
     ball: &Ball,
     block: &Block,
-) -> Option<Collision<Vector2<f64>>> {
+) -> Option<Event<Vector2<f64>>> {
     let Block {
         top,
         left,

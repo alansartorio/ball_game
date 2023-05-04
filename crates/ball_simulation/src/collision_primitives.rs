@@ -1,6 +1,6 @@
 use nalgebra::Vector2;
 
-use crate::{Ball, Collision};
+use crate::{Ball, Event};
 
 fn ball_ball(b1: &Ball, b2: &Ball) -> Option<f64> {
     let delta_v = b2.velocity - b1.velocity;
@@ -50,7 +50,7 @@ pub(crate) fn segment_ball(
     segment_a: Vector2<f64>,
     segment_b: Vector2<f64>,
     ball: &Ball,
-) -> Option<Collision<Vector2<f64>>> {
+) -> Option<Event<Vector2<f64>>> {
     let ab = segment_b - segment_a;
     let ab_mag = ab.magnitude();
     let signed_distance = (ball.position - segment_a).perp(&ab) / ab_mag;
@@ -59,12 +59,12 @@ pub(crate) fn segment_ball(
     } else if signed_distance < ball.radius {
         let ab_proj = (ball.position - segment_a).dot(&ab) / ab_mag.powi(2);
         if ab_proj < 0.0 {
-            ball_point(ball, segment_a).map(|time| Collision {
+            ball_point(ball, segment_a).map(|time| Event {
                 time,
                 data: segment_a,
             })
         } else if ab_proj > 1.0 {
-            ball_point(ball, segment_b).map(|time| Collision {
+            ball_point(ball, segment_b).map(|time| Event {
                 time,
                 data: segment_b,
             })
@@ -74,18 +74,18 @@ pub(crate) fn segment_ball(
     } else {
         let alpha = segment_ball_alpha(segment_a, segment_b, ball);
         if alpha < 0.0 {
-            ball_point(ball, segment_a).map(|time| Collision {
+            ball_point(ball, segment_a).map(|time| Event {
                 time,
                 data: segment_a,
             })
         } else if alpha > 1.0 {
-            ball_point(ball, segment_b).map(|time| Collision {
+            ball_point(ball, segment_b).map(|time| Event {
                 time,
                 data: segment_b,
             })
         } else {
             let time = segment_ball_time(segment_a, segment_b, ball, alpha);
-            Some(Collision {
+            Some(Event {
                 time,
                 data: segment_a + alpha * (segment_b - segment_a),
             })
@@ -100,7 +100,7 @@ mod tests {
 
     use crate::{
         collision_primitives::{segment_ball, segment_ball_time},
-        Ball, Collision,
+        Ball, Event,
     };
 
     use super::segment_ball_alpha;
@@ -124,7 +124,7 @@ mod tests {
         assert!(collision.is_some());
         assert_eq!(
             collision.unwrap(),
-            Collision {
+            Event {
                 time: 2.5,
                 data: Vector2::new(5.5, -1.0),
             }
@@ -151,7 +151,7 @@ mod tests {
         assert!(collision1.is_some());
         assert_eq!(
             collision1.unwrap(),
-            Collision {
+            Event {
                 time: 1.5,
                 data: segment_a,
             }
