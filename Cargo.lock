@@ -275,6 +275,7 @@ version = "0.1.0"
 name = "ball_simulation"
 version = "0.1.0"
 dependencies = [
+ "approx",
  "itertools",
  "nalgebra",
 ]

@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 itertools = { workspace = true }
 nalgebra = { workspace = true }
+approx = { workspace = true }

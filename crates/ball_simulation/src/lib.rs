@@ -1,21 +1,20 @@
+mod collision_finder;
 mod collision_times;
-use collision_times::{earliest_collision_ball_block, earliest_collision_ball_walls};
-use itertools::Itertools;
+mod collision_primitives;
 use nalgebra::Vector2;
 
-type ID = usize;
-
+#[derive(Clone, Copy)]
 pub struct Ball {
-    position: Vector2<f64>,
-    velocity: Vector2<f64>,
-    radius: f64,
+    pub position: Vector2<f64>,
+    pub velocity: Vector2<f64>,
+    pub radius: f64,
 }
 
 pub struct Block {
-    top: f64,
-    left: f64,
-    right: f64,
-    bottom: f64,
+    pub top: f64,
+    pub left: f64,
+    pub right: f64,
+    pub bottom: f64,
 }
 
 impl Block {
@@ -29,66 +28,67 @@ impl Block {
     }
 }
 
-pub struct SimulationInput<'a> {
+pub struct SimulationState {
     space_width: f64,
     space_height: f64,
-    balls: &'a [Ball],
-    blocks: &'a [Block],
+    balls: Vec<Ball>,
+    blocks: Vec<Block>,
 }
 
+impl SimulationState {
+    fn forward(&mut self, time: f64) {
+        for ball in self.balls.iter_mut() {
+            ball.position += ball.velocity * time;
+        }
+    }
+
+    fn next(mut self) -> Option<(SimulationState, Collision<CollisionData>)> {
+        self.earliest_collision().map(
+            |collision| {
+                let Collision {
+                                 time,
+                                 data: CollisionData { ball, against },
+                 } = collision;
+
+                self.forward(time);
+
+                match against {
+                    CollisionType::Wall(wall_type) => match wall_type {
+                        WallType::Horizontal => self.balls[ball].velocity.y *= -1.0,
+                        WallType::Vertical => self.balls[ball].velocity.x *= -1.0,
+                    },
+                    CollisionType::Block(block) => {
+                        //let block = self.blocks[block];
+                        //let 
+                    }
+                }
+
+                (self, collision)
+            },
+        )
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Collision<T> {
     time: f64,
     data: T,
 }
 
-pub struct CollisionData<'a> {
-    ball: &'a Ball,
-    against: CollisionType<'a>,
+#[derive(Debug, Clone, Copy)]
+pub struct CollisionData {
+    pub ball: usize,
+    pub against: CollisionType,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum WallType {
     Horizontal,
     Vertical,
 }
 
-pub enum CollisionType<'a> {
+#[derive(Debug, Clone, Copy)]
+pub enum CollisionType {
     Wall(WallType),
-    Block(&'a Block),
-}
-
-impl<'a> Iterator for SimulationInput<'a> {
-    type Item = Collision<CollisionData<'a>>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.balls
-            .iter()
-            .filter_map(|ball| {
-                earliest_collision_ball_walls(ball, self.space_width, self.space_height).map(
-                    |Collision { time, data }| Collision {
-                        time,
-                        data: CollisionData {
-                            ball,
-                            against: CollisionType::Wall(data),
-                        },
-                    },
-                )
-            })
-            .chain(
-                self.balls
-                    .iter()
-                    .cartesian_product(self.blocks.iter())
-                    .filter_map(|(ball, block)| {
-                        earliest_collision_ball_block(ball, block).map(
-                            |Collision { time, .. }| Collision {
-                                time,
-                                data: CollisionData {
-                                    ball,
-                                    against: CollisionType::Block(block),
-                                },
-                            },
-                        )
-                    }),
-            )
-            .min_by(|a, b| a.time.total_cmp(&b.time))
-    }
+    Block(usize),
 }

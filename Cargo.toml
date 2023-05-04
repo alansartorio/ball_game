@@ -11,6 +11,7 @@ members = [
 [workspace.dependencies]
 itertools = "0.10.5"
 nalgebra = "0.32.2"
+approx = "0.5.1"
 
 [dependencies]
 bevy = "0.10.1"
