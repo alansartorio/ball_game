@@ -3,7 +3,16 @@ name = "ball_game"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[workspace]
+members = [
+	"crates/*"
+]
+
+[workspace.dependencies]
+itertools = "0.10.5"
+nalgebra = "0.32.2"
 
 [dependencies]
 bevy = "0.10.1"
+ball_interpolator = { path = "crates/ball_interpolator" }
+ball_simulation = { path = "crates/ball_simulation" }
