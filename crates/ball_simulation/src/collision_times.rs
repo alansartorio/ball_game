@@ -1,4 +1,6 @@
-use crate::{Ball, Block, Collision, WallType};
+use nalgebra::Vector2;
+
+use crate::{collision_primitives::segment_ball, Ball, Block, Collision, WallType};
 
 pub(crate) fn earliest_collision_ball_walls(
     ball: &Ball,
@@ -37,6 +39,22 @@ pub(crate) fn earliest_collision_ball_walls(
         .min_by(|a, b| a.time.partial_cmp(&b.time).unwrap())
 }
 
-pub(crate) fn earliest_collision_ball_block(ball: &Ball, block: &Block) -> Option<Collision<()>> {
-    todo!();
+pub(crate) fn earliest_collision_ball_block(
+    ball: &Ball,
+    block: &Block,
+) -> Option<Collision<Vector2<f64>>> {
+    let Block {
+        top,
+        left,
+        right,
+        bottom,
+    } = *block;
+    let tl = Vector2::new(left, top);
+    let tr = Vector2::new(right, top);
+    let bl = Vector2::new(left, bottom);
+    let br = Vector2::new(right, bottom);
+    [[tr, tl], [tl, bl], [bl, br], [br, tr]]
+        .into_iter()
+        .filter_map(|[segment_a, segment_b]| segment_ball(segment_a, segment_b, ball))
+        .min_by(|a, b| a.time.total_cmp(&b.time))
 }
