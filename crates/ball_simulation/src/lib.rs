@@ -1,6 +1,6 @@
 mod collision_finder;
-mod collision_times;
 mod collision_primitives;
+mod collision_times;
 use nalgebra::Vector2;
 
 #[derive(Clone, Copy)]
@@ -43,29 +43,27 @@ impl SimulationState {
     }
 
     fn next(mut self) -> Option<(SimulationState, Collision<CollisionData>)> {
-        self.earliest_collision().map(
-            |collision| {
-                let Collision {
-                                 time,
-                                 data: CollisionData { ball, against },
-                 } = collision;
+        self.earliest_collision().map(|collision| {
+            let Collision {
+                time,
+                data: CollisionData { ball, against },
+            } = collision;
 
-                self.forward(time);
+            self.forward(time);
 
-                match against {
-                    CollisionType::Wall(wall_type) => match wall_type {
-                        WallType::Horizontal => self.balls[ball].velocity.y *= -1.0,
-                        WallType::Vertical => self.balls[ball].velocity.x *= -1.0,
-                    },
-                    CollisionType::Block(block) => {
-                        //let block = self.blocks[block];
-                        //let 
-                    }
+            match against {
+                CollisionType::Wall(wall_type) => match wall_type {
+                    WallType::Horizontal => self.balls[ball].velocity.y *= -1.0,
+                    WallType::Vertical => self.balls[ball].velocity.x *= -1.0,
+                },
+                CollisionType::Block(block) => {
+                    //let block = self.blocks[block];
+                    //let
                 }
+            }
 
-                (self, collision)
-            },
-        )
+            (self, collision)
+        })
     }
 }
 
