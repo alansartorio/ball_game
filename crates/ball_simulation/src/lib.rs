@@ -55,7 +55,7 @@ impl SimulationState {
 
             self.forward(time);
 
-            println!("{:?}", event);
+            //println!("{:?}", event);
 
             match event_data {
                 EventType::Collision(CollisionData { ball, against }) => {
@@ -78,7 +78,7 @@ impl SimulationState {
                                 ball.velocity.dot(&contact_normal) * contact_normal;
                             let previous = ball.velocity;
                             ball.velocity -= 2.0 * normal_velocity;
-                            println!("before: {:?} | after: {:?}", previous, ball.velocity);
+                            //println!("before: {:?} | after: {:?}", previous, ball.velocity);
                         }
                     }
                 }
