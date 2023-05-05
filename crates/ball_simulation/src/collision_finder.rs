@@ -5,14 +5,14 @@ use crate::{
 use itertools::Itertools;
 
 use crate::{CollisionData, CollisionType, Event, SimulationState};
-use std::iter;
+use std::{iter, ops::{Mul, Div, Add}};
 
 impl SimulationState {
     pub(crate) fn earliest_event(&mut self) -> Option<Event<EventType>> {
         // TODO: remove spawner
 
         iter::once(Event {
-            time: self.time.floor() + 1.0 - self.time,
+            time: self.time.mul(6.0).floor().add(1.0).div(6.0) - self.time,
             data: EventType::Spawn,
         })
         .chain(

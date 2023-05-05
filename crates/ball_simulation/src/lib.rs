@@ -55,6 +55,8 @@ impl SimulationState {
 
             self.forward(time);
 
+            println!("{:?}", event);
+
             match event_data {
                 EventType::Collision(CollisionData { ball, against }) => {
                     match against {
@@ -70,14 +72,16 @@ impl SimulationState {
                             let contact_normal = (contact_position - ball.position).normalize();
                             let normal_velocity =
                                 ball.velocity.dot(&contact_normal) * contact_normal;
+                            let previous = ball.velocity;
                             ball.velocity -= 2.0 * normal_velocity;
+                            println!("before: {:?} | after: {:?}", previous, ball.velocity);
                         }
                     }
                 }
                 EventType::Spawn => self.balls.push(Ball {
-                    position: Vector2::new(0.5, 0.5),
-                    velocity: Vector2::new(1.0, 1.0),
-                    radius: 0.1,
+                    position: Vector2::new(0.2, 0.2),
+                    velocity: Vector2::new(0.2, 0.00313) * 10.0,
+                    radius: 0.01,
                 }),
             }
 
