@@ -11,7 +11,7 @@ nalgebra = { workspace = true }
 approx = { workspace = true }
 
 [dev-dependencies]
-criterion = "0.4.0"
+criterion = { version = "0.4.0" , features = ["html_reports"] }
 
 [[bench]]
 name = "simulation_benchmark"
