@@ -8,6 +8,32 @@ use bevy::{
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
 
+use crate::{despawn_screen, GameState};
+
+#[derive(Component)]
+pub struct OnGame;
+
+pub struct GamePlugin;
+
+impl Plugin for GamePlugin {
+    fn build(&self, app: &mut App) {
+        app.add_system(add_simulation_state.in_schedule(OnEnter(GameState::Game)))
+            .add_system(initialize_camera.in_schedule(OnEnter(GameState::Game)))
+            .add_system(update_simulation.in_set(OnUpdate(GameState::Game)))
+            .add_system(
+                interpolate_simulation
+                    .after(update_simulation)
+                    .in_set(OnUpdate(GameState::Game)),
+            )
+            .add_system(
+                update_balls
+                    .after(interpolate_simulation)
+                    .in_set(OnUpdate(GameState::Game)),
+            )
+            .add_system(despawn_screen::<OnGame>.in_schedule(OnExit(GameState::Game)));
+    }
+}
+
 #[derive(Resource)]
 struct Simulation {
     state: SimulationState,
@@ -52,6 +78,7 @@ fn add_simulation_state(
             ..default()
         },
         Block,
+        OnGame,
     ));
 
     for y in 6..=10 {
@@ -95,6 +122,7 @@ fn add_simulation_state(
     commands.spawn((
         Mesh2dHandle::from(meshes.add(shape::Circle::new(1.).into())),
         BallMesh,
+        OnGame,
     ));
 }
 
@@ -119,7 +147,7 @@ fn initialize_camera(mut commands: Commands) {
         ..Default::default()
     };
     camera.projection.scale = 0.002;
-    commands.spawn(camera);
+    commands.spawn((camera, OnGame));
 }
 
 fn add_ball(
@@ -137,6 +165,7 @@ fn add_ball(
                 ..default()
             },
             Ball,
+            OnGame,
         ))
         .id();
     ball_ids.0.push(id);
@@ -168,6 +197,7 @@ fn add_block(
                 ..default()
             },
             Block,
+            OnGame,
         ))
         .id();
     block_ids.0.push(id);
@@ -252,17 +282,5 @@ fn update_balls(
         ball_entity.translation = Vec3::new(ball.position.x as f32, ball.position.y as f32, 0.0);
         ball_entity.scale = Vec2::new(ball.radius as f32, ball.radius as f32).extend(1.0);
         *visibility = Visibility::Visible;
-    }
-}
-
-pub struct GamePlugin;
-
-impl Plugin for GamePlugin {
-    fn build(&self, app: &mut App) {
-        app.add_startup_system(add_simulation_state)
-            .add_startup_system(initialize_camera)
-            .add_system(update_simulation)
-            .add_system(interpolate_simulation.after(update_simulation))
-            .add_system(update_balls.after(interpolate_simulation));
     }
 }

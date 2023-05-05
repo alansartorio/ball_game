@@ -1,10 +1,17 @@
 use bevy::{app::AppExit, prelude::*};
 
+use crate::{despawn_screen, GameState};
+
+#[derive(Component)]
+pub struct OnMenu;
+
 pub struct MenuPlugin;
 
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup_menu).add_system(menu_action);
+        app.add_system(menu_setup.in_schedule(OnEnter(GameState::Menu)))
+            .add_system(menu_action.in_set(OnUpdate(GameState::Menu)))
+            .add_system(despawn_screen::<OnMenu>.in_schedule(OnExit(GameState::Menu)));
     }
 }
 
@@ -14,8 +21,8 @@ enum MenuButtonAction {
     Quit,
 }
 
-fn setup_menu(mut commands: Commands, assets: Res<AssetServer>) {
-    commands.spawn(Camera2dBundle::default());
+fn menu_setup(mut commands: Commands, assets: Res<AssetServer>) {
+    commands.spawn((Camera2dBundle::default(), OnMenu));
     let font = assets.load::<Font, _>("fonts/OpenSans-Regular.ttf");
 
     let button_text_style = TextStyle {
@@ -25,16 +32,19 @@ fn setup_menu(mut commands: Commands, assets: Res<AssetServer>) {
     };
 
     commands
-        .spawn(NodeBundle {
-            style: Style {
-                size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
-                flex_direction: FlexDirection::Column,
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    flex_direction: FlexDirection::Column,
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        })
+            OnMenu,
+        ))
         .with_children(|parent| {
             parent.spawn(
                 TextBundle::from_section(
@@ -89,14 +99,14 @@ fn menu_action(
         (Changed<Interaction>, With<Button>),
     >,
     mut app_exit_events: EventWriter<AppExit>,
+    mut game_state: ResMut<NextState<GameState>>,
 ) {
     for (interaction, menu_button_action) in &interaction_query {
         if *interaction == Interaction::Clicked {
             match menu_button_action {
                 MenuButtonAction::Quit => app_exit_events.send(AppExit),
                 MenuButtonAction::Play => {
-                    //game_state.set(GameState::Game);
-                    println!("Play");
+                    game_state.set(GameState::Game);
                 }
             }
         }
