@@ -282,6 +282,7 @@ dependencies = [
  "ball_interpolator",
  "ball_simulation",
  "bevy",
+ "nalgebra",
 ]
 
 [[package]]

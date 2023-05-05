@@ -17,3 +17,4 @@ approx = "0.5.1"
 bevy = "0.10.1"
 ball_interpolator = { path = "crates/ball_interpolator" }
 ball_simulation = { path = "crates/ball_simulation" }
+nalgebra = { workspace = true }

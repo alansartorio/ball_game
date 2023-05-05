@@ -1,5 +1,5 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use ball_simulation::SimulationState;
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 pub fn criterion_benchmark(c: &mut Criterion) {
     let state = SimulationState {
@@ -9,7 +9,9 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         balls: vec![],
         blocks: vec![],
     };
-    c.bench_function("simulation iteration", |b| b.iter(|| SimulationState::next(black_box(state.clone()))));
+    c.bench_function("simulation iteration", |b| {
+        b.iter(|| SimulationState::next(black_box(state.clone())))
+    });
 }
 
 criterion_group!(benches, criterion_benchmark);

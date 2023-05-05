@@ -46,8 +46,11 @@ impl SimulationState {
         self.time += time;
     }
 
-    pub fn next(mut self) -> Option<(SimulationState, Event<EventType>)> {
-        self.earliest_event().map(|event| {
+    pub fn next(
+        mut self,
+        custom_events: &[Event<EventType>],
+    ) -> Option<(SimulationState, Event<EventType>)> {
+        self.earliest_event(custom_events).map(|event| {
             let Event {
                 time,
                 data: event_data,
@@ -58,35 +61,25 @@ impl SimulationState {
             //println!("{:?}", event);
 
             match event_data {
-                EventType::Collision(CollisionData { ball, against }) => {
-                    match against {
-                        CollisionType::Wall(wall_type) => match wall_type {
-                            WallType::YPositive | WallType::YNegative => {
-                                self.balls[ball].velocity.y *= -1.0
-                            }
-                            WallType::XNegative | WallType::XPositive => {
-                                self.balls[ball].velocity.x *= -1.0
-                            }
-                        },
-                        CollisionType::Block {
-                            contact_position, ..
-                        } => {
-                            //let block = &self.blocks[index];
-                            let ball = &mut self.balls[ball];
-                            let contact_normal = (contact_position - ball.position).normalize();
-                            let normal_velocity =
-                                ball.velocity.dot(&contact_normal) * contact_normal;
-                            let previous = ball.velocity;
-                            ball.velocity -= 2.0 * normal_velocity;
-                            //println!("before: {:?} | after: {:?}", previous, ball.velocity);
+                EventType::Collision(CollisionData { ball, against }) => match against {
+                    CollisionType::Wall(wall_type) => match wall_type {
+                        WallType::YPositive | WallType::YNegative => {
+                            self.balls[ball].velocity.y *= -1.0
                         }
+                        WallType::XNegative | WallType::XPositive => {
+                            self.balls[ball].velocity.x *= -1.0
+                        }
+                    },
+                    CollisionType::Block {
+                        contact_position, ..
+                    } => {
+                        let ball = &mut self.balls[ball];
+                        let contact_normal = (contact_position - ball.position).normalize();
+                        let normal_velocity = ball.velocity.dot(&contact_normal) * contact_normal;
+                        ball.velocity -= 2.0 * normal_velocity;
                     }
-                }
-                EventType::Spawn => self.balls.push(Ball {
-                    position: Vector2::new(0.2, 0.2),
-                    velocity: Vector2::new(0.2, 0.00313) * 10.0,
-                    radius: 0.01,
-                }),
+                },
+                EventType::Custom => {}
             }
 
             (self, event)
@@ -103,7 +96,7 @@ pub struct Event<T> {
 #[derive(Debug, Clone, Copy)]
 pub enum EventType {
     Collision(CollisionData),
-    Spawn,
+    Custom,
 }
 
 #[derive(Debug, Clone, Copy)]

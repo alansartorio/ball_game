@@ -1,5 +1,7 @@
 #![feature(let_chains)]
+use nalgebra::Vector2;
 use std::f32::consts::PI;
+use std::ops::{Add, Div, Mul};
 
 use ball_interpolator::*;
 use ball_simulation::*;
@@ -171,8 +173,12 @@ fn update_simulation(
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     while let (next_state, next_event) = {
+        let time = simulation.state.time;
         if simulation.next.is_none() {
-            simulation.next = simulation.state.clone().next();
+            simulation.next = simulation.state.clone().next(&[ball_simulation::Event {
+                time: time.mul(6.0).floor().add(1.0).div(6.0) - time,
+                data: EventType::Custom,
+            }]);
         }
         simulation.next.as_ref().unwrap()
     } && time.elapsed_seconds() as f64 >= next_state.time {
@@ -184,7 +190,12 @@ fn update_simulation(
         interpolated_simulation.state = simulation.state.clone();
         //println!("Time: {} | Event: {:?}", simulation.state.time, event);
 
-        if let EventType::Spawn = next_event.data {
+        if let EventType::Custom = next_event.data {
+            simulation.state.balls.push(ball_simulation::Ball {
+                position: Vector2::new(0.2, 0.2),
+                velocity: Vector2::new(0.2, 0.00313) * 10.0,
+                radius: 0.01,
+            });
             add_ball(
                 &mut commands,
                 &mut ball_ids,
