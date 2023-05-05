@@ -10,28 +10,32 @@ pub(crate) fn earliest_collision_ball_walls(
     let radius = ball.radius;
 
     let time_x = if ball.velocity.x > 0.0 {
-        Some((width - radius - ball.position.x) / ball.velocity.x)
+        Some(Event {
+            time: (width - radius - ball.position.x) / ball.velocity.x,
+            data: WallType::Right,
+        })
     } else if ball.velocity.x < 0.0 {
-        Some((radius - ball.position.x) / ball.velocity.x)
+        Some(Event {
+            time: (radius - ball.position.x) / ball.velocity.x,
+            data: WallType::Left,
+        })
     } else {
         None
-    }
-    .map(|time| Event {
-        time,
-        data: WallType::Vertical,
-    });
+    };
 
     let time_y = if ball.velocity.y > 0.0 {
-        Some((height - radius - ball.position.y) / ball.velocity.y)
+        Some(Event {
+            time: (height - radius - ball.position.y) / ball.velocity.y,
+            data: WallType::Top,
+        })
     } else if ball.velocity.y < 0.0 {
-        Some((radius - ball.position.y) / ball.velocity.y)
+        Some(Event {
+            time: (radius - ball.position.y) / ball.velocity.y,
+            data: WallType::Bottom,
+        })
     } else {
         None
-    }
-    .map(|time| Event {
-        time,
-        data: WallType::Horizontal,
-    });
+    };
 
     time_x
         .into_iter()

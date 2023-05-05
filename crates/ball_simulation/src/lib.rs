@@ -3,13 +3,14 @@ mod collision_primitives;
 mod collision_times;
 use nalgebra::Vector2;
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Ball {
     pub position: Vector2<f64>,
     pub velocity: Vector2<f64>,
     pub radius: f64,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Block {
     pub top: f64,
     pub left: f64,
@@ -28,6 +29,7 @@ impl Block {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct SimulationState {
     pub time: f64,
     pub space_width: f64,
@@ -41,6 +43,7 @@ impl SimulationState {
         for ball in self.balls.iter_mut() {
             ball.position += ball.velocity * time;
         }
+        self.time += time;
     }
 
     pub fn next(mut self) -> Option<(SimulationState, Event<EventType>)> {
@@ -56,8 +59,8 @@ impl SimulationState {
                 EventType::Collision(CollisionData { ball, against }) => {
                     match against {
                         CollisionType::Wall(wall_type) => match wall_type {
-                            WallType::Horizontal => self.balls[ball].velocity.y *= -1.0,
-                            WallType::Vertical => self.balls[ball].velocity.x *= -1.0,
+                            WallType::Top | WallType::Bottom => self.balls[ball].velocity.y *= -1.0,
+                            WallType::Left | WallType::Right => self.balls[ball].velocity.x *= -1.0,
                         },
                         CollisionType::Block {
                             contact_position, ..
@@ -72,9 +75,9 @@ impl SimulationState {
                     }
                 }
                 EventType::Spawn => self.balls.push(Ball {
-                    position: Vector2::new(0.0, 0.0),
-                    velocity: Vector2::new(1.0, 0.0),
-                    radius: 1.0,
+                    position: Vector2::new(0.5, 0.5),
+                    velocity: Vector2::new(1.0, 1.0),
+                    radius: 0.1,
                 }),
             }
 
@@ -85,8 +88,8 @@ impl SimulationState {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Event<T> {
-    time: f64,
-    data: T,
+    pub time: f64,
+    pub data: T,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -103,8 +106,10 @@ pub struct CollisionData {
 
 #[derive(Debug, Clone, Copy)]
 pub enum WallType {
-    Horizontal,
-    Vertical,
+    Top,
+    Bottom,
+    Left,
+    Right,
 }
 
 #[derive(Debug, Clone, Copy)]

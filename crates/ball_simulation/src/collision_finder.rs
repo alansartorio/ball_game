@@ -12,7 +12,7 @@ impl SimulationState {
         // TODO: remove spawner
 
         iter::once(Event {
-            time: self.time.ceil() - self.time,
+            time: self.time.floor() + 1.0 - self.time,
             data: EventType::Spawn,
         })
         .chain(
