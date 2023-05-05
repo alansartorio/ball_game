@@ -1,6 +1,9 @@
 use nalgebra::Vector2;
 
-use crate::{collision_primitives::segment_ball, Ball, Block, Event, WallType};
+use crate::{
+    collision_primitives::{ball_ball, segment_ball},
+    Ball, Block, Event, WallType,
+};
 
 pub(crate) fn earliest_collision_ball_walls(
     ball: &Ball,
@@ -53,12 +56,24 @@ pub(crate) fn earliest_collision_ball_block(
         max_x,
         min_y,
     } = *block;
+    let center = Vector2::new((min_x + max_x) / 2.0, (min_y + max_y) / 2.0);
     let tl = Vector2::new(min_x, max_y);
     let tr = Vector2::new(max_x, max_y);
     let bl = Vector2::new(min_x, min_y);
     let br = Vector2::new(max_x, min_y);
-    [[tr, tl], [tl, bl], [bl, br], [br, tr]]
-        .into_iter()
-        .filter_map(|[segment_a, segment_b]| segment_ball(segment_a, segment_b, ball))
-        .min_by(|a, b| a.time.total_cmp(&b.time))
+    let radius = (tl - center).magnitude();
+    ball_ball(
+        ball,
+        &Ball {
+            position: center,
+            velocity: Vector2::zeros(),
+            radius,
+        },
+    )
+    .and_then(|_| {
+        [[tr, tl], [tl, bl], [bl, br], [br, tr]]
+            .into_iter()
+            .filter_map(|[segment_a, segment_b]| segment_ball(segment_a, segment_b, ball))
+            .min_by(|a, b| a.time.total_cmp(&b.time))
+    })
 }

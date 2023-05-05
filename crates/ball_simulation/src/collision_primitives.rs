@@ -2,7 +2,7 @@ use nalgebra::Vector2;
 
 use crate::{Ball, Event};
 
-fn ball_ball(b1: &Ball, b2: &Ball) -> Option<f64> {
+pub(crate) fn ball_ball(b1: &Ball, b2: &Ball) -> Option<f64> {
     let delta_v = b2.velocity - b1.velocity;
     let delta_r = b2.position - b1.position;
     let sigma = b1.radius + b2.radius;
