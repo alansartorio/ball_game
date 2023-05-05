@@ -12,19 +12,19 @@ pub struct Ball {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Block {
-    pub top: f64,
-    pub left: f64,
-    pub right: f64,
-    pub bottom: f64,
+    pub max_y: f64,
+    pub min_x: f64,
+    pub max_x: f64,
+    pub min_y: f64,
 }
 
 impl Block {
     pub fn new(top: f64, bottom: f64, left: f64, right: f64) -> Self {
         Self {
-            top,
-            bottom,
-            left,
-            right,
+            max_y: top,
+            min_y: bottom,
+            min_x: left,
+            max_x: right,
         }
     }
 }
@@ -59,8 +59,8 @@ impl SimulationState {
                 EventType::Collision(CollisionData { ball, against }) => {
                     match against {
                         CollisionType::Wall(wall_type) => match wall_type {
-                            WallType::Top | WallType::Bottom => self.balls[ball].velocity.y *= -1.0,
-                            WallType::Left | WallType::Right => self.balls[ball].velocity.x *= -1.0,
+                            WallType::YPositive | WallType::YNegative => self.balls[ball].velocity.y *= -1.0,
+                            WallType::XNegative | WallType::XPositive => self.balls[ball].velocity.x *= -1.0,
                         },
                         CollisionType::Block {
                             contact_position, ..
@@ -106,10 +106,10 @@ pub struct CollisionData {
 
 #[derive(Debug, Clone, Copy)]
 pub enum WallType {
-    Top,
-    Bottom,
-    Left,
-    Right,
+    YPositive,
+    YNegative,
+    XNegative,
+    XPositive,
 }
 
 #[derive(Debug, Clone, Copy)]

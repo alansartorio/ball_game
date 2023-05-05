@@ -1,6 +1,6 @@
 use ball_interpolator::*;
 use ball_simulation::*;
-use bevy::{prelude::*, render::view::visibility, sprite::MaterialMesh2dBundle};
+use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
 #[derive(Resource)]
 struct Simulation {
@@ -25,7 +25,12 @@ fn add_simulation_state(mut commands: Commands) {
         space_width: 1.0,
         space_height: 1.0,
         balls: vec![],
-        blocks: vec![],
+        blocks: vec![ball_simulation::Block {
+            min_y: 0.8,
+            max_y: 0.9,
+            min_x: 0.8,
+            max_x: 0.9,
+        }],
     };
     commands.insert_resource(Simulation {
         state: simulation_state.clone(),
@@ -88,10 +93,9 @@ fn update_simulation(
             add_ball(&mut commands, &mut meshes, &mut materials);
         } else if let EventType::Collision(CollisionData {
             ball,
-            against: CollisionType::Wall(WallType::Bottom),
+            against: CollisionType::Wall(WallType::YNegative),
         }) = next_event.data
         {
-
             commands.entity(balls.iter().next().unwrap()).despawn();
             simulation.state.balls.remove(ball);
         }

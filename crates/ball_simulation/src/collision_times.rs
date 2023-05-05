@@ -12,12 +12,12 @@ pub(crate) fn earliest_collision_ball_walls(
     let time_x = if ball.velocity.x > 0.0 {
         Some(Event {
             time: (width - radius - ball.position.x) / ball.velocity.x,
-            data: WallType::Right,
+            data: WallType::XPositive,
         })
     } else if ball.velocity.x < 0.0 {
         Some(Event {
             time: (radius - ball.position.x) / ball.velocity.x,
-            data: WallType::Left,
+            data: WallType::XNegative,
         })
     } else {
         None
@@ -26,12 +26,12 @@ pub(crate) fn earliest_collision_ball_walls(
     let time_y = if ball.velocity.y > 0.0 {
         Some(Event {
             time: (height - radius - ball.position.y) / ball.velocity.y,
-            data: WallType::Top,
+            data: WallType::YPositive,
         })
     } else if ball.velocity.y < 0.0 {
         Some(Event {
             time: (radius - ball.position.y) / ball.velocity.y,
-            data: WallType::Bottom,
+            data: WallType::YNegative,
         })
     } else {
         None
@@ -48,15 +48,15 @@ pub(crate) fn earliest_collision_ball_block(
     block: &Block,
 ) -> Option<Event<Vector2<f64>>> {
     let Block {
-        top,
-        left,
-        right,
-        bottom,
+        min_x,
+        max_y,
+        max_x,
+        min_y,
     } = *block;
-    let tl = Vector2::new(left, top);
-    let tr = Vector2::new(right, top);
-    let bl = Vector2::new(left, bottom);
-    let br = Vector2::new(right, bottom);
+    let tl = Vector2::new(min_x, max_y);
+    let tr = Vector2::new(max_x, max_y);
+    let bl = Vector2::new(min_x, min_y);
+    let br = Vector2::new(max_x, min_y);
     [[tr, tl], [tl, bl], [bl, br], [br, tr]]
         .into_iter()
         .filter_map(|[segment_a, segment_b]| segment_ball(segment_a, segment_b, ball))
