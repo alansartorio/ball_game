@@ -44,6 +44,19 @@ fn add_simulation_state(
 ) {
     let mut blocks = vec![];
 
+    commands.spawn((
+        MaterialMesh2dBundle {
+            mesh: meshes
+                .add(shape::RegularPolygon::new(2f32.sqrt() / 2.0, 4).into())
+                .into(),
+            material: materials.add(ColorMaterial::from(Color::BLACK)),
+            transform: Transform::from_xyz(0.5, 0.5, -1.0)
+                .with_rotation(Quat::from_rotation_z(PI / 4.0)),
+            ..default()
+        },
+        Block,
+    ));
+
     for y in 6..=10 {
         let y = y as f64 / 11.0;
         for x in 1..=10 {
