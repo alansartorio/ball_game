@@ -61,8 +61,12 @@ impl SimulationState {
                 EventType::Collision(CollisionData { ball, against }) => {
                     match against {
                         CollisionType::Wall(wall_type) => match wall_type {
-                            WallType::YPositive | WallType::YNegative => self.balls[ball].velocity.y *= -1.0,
-                            WallType::XNegative | WallType::XPositive => self.balls[ball].velocity.x *= -1.0,
+                            WallType::YPositive | WallType::YNegative => {
+                                self.balls[ball].velocity.y *= -1.0
+                            }
+                            WallType::XNegative | WallType::XPositive => {
+                                self.balls[ball].velocity.x *= -1.0
+                            }
                         },
                         CollisionType::Block {
                             contact_position, ..

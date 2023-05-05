@@ -5,7 +5,10 @@ use crate::{
 use itertools::Itertools;
 
 use crate::{CollisionData, CollisionType, Event, SimulationState};
-use std::{iter, ops::{Mul, Div, Add}};
+use std::{
+    iter,
+    ops::{Add, Div, Mul},
+};
 
 impl SimulationState {
     pub(crate) fn earliest_event(&mut self) -> Option<Event<EventType>> {

@@ -79,7 +79,10 @@ fn add_simulation_state(
     commands.insert_resource(InterpolatedSimulation {
         state: simulation_state,
     });
-    commands.spawn((Mesh2dHandle::from(meshes.add(shape::Circle::new(1.).into())), BallMesh));
+    commands.spawn((
+        Mesh2dHandle::from(meshes.add(shape::Circle::new(1.).into())),
+        BallMesh,
+    ));
 }
 
 fn add_blocks_from_state(

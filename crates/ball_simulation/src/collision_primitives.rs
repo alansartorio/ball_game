@@ -90,7 +90,8 @@ pub(crate) fn segment_ball(
                 data: segment_a + alpha * (segment_b - segment_a),
             })
         }
-    }.filter(|event| event.time >= 0.0)
+    }
+    .filter(|event| event.time >= 0.0)
 }
 
 #[cfg(test)]
