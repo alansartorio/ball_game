@@ -1,4 +1,5 @@
 #![feature(let_chains)]
+#![feature(option_as_slice)]
 use nalgebra::Vector2;
 use std::f32::consts::PI;
 use std::ops::{Add, Div, Mul};
@@ -172,15 +173,16 @@ fn update_simulation(
     ball_mesh: Query<&Mesh2dHandle, With<BallMesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    while let (next_state, next_event) = {
+    while let Some((next_state, next_event)) = {
         let time = simulation.state.time;
         if simulation.next.is_none() {
-            simulation.next = simulation.state.clone().next(&[ball_simulation::Event {
+            let spawn_event = (time < 10.0).then(||ball_simulation::Event {
                 time: time.mul(6.0).floor().add(1.0).div(6.0) - time,
                 data: EventType::Custom,
-            }]);
+            });
+            simulation.next = simulation.state.clone().next(spawn_event.as_slice());
         }
-        simulation.next.as_ref().unwrap()
+        simulation.next.as_ref()
     } && time.elapsed_seconds() as f64 >= next_state.time {
         let next_state = next_state.clone();
         let next_event = *next_event;
@@ -192,8 +194,8 @@ fn update_simulation(
 
         if let EventType::Custom = next_event.data {
             simulation.state.balls.push(ball_simulation::Ball {
-                position: Vector2::new(0.2, 0.2),
-                velocity: Vector2::new(0.2, 0.00313) * 10.0,
+                position: Vector2::new(0.2, 0.0),
+                velocity: Vector2::new(0.2, 0.02) * 10.0,
                 radius: 0.01,
             });
             add_ball(
