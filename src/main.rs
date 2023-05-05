@@ -1,3 +1,4 @@
+#![feature(let_chains)]
 use std::f32::consts::PI;
 
 use ball_interpolator::*;
@@ -166,16 +167,16 @@ fn update_simulation(
     ball_mesh: Query<&Mesh2dHandle, With<BallMesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    if simulation.next.is_none() {
-        simulation.next = simulation.state.clone().next();
-    }
-    while simulation
-        .next
-        .as_ref()
-        .is_some_and(|(next_state, _)| time.elapsed_seconds() > next_state.time as f32)
-    {
-        let (next_state, next_event) = simulation.next.as_ref().unwrap().clone();
-        simulation.state = next_state;
+    while let (next_state, next_event) = {
+        if simulation.next.is_none() {
+            simulation.next = simulation.state.clone().next();
+        }
+        simulation.next.as_ref().unwrap()
+    } && time.elapsed_seconds() as f64 >= next_state.time {
+        let next_state = next_state.clone();
+        let next_event = *next_event;
+
+        simulation.state = next_state.clone();
         simulation.next = None;
         interpolated_simulation.state = simulation.state.clone();
         //println!("Time: {} | Event: {:?}", simulation.state.time, event);
