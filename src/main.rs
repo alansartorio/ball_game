@@ -14,15 +14,17 @@ pub enum GameState {
     Game,
 }
 
-fn main() {
-    App::new()
-        .add_state::<GameState>()
-        .add_plugins(DefaultPlugins)
-        .add_plugin(GamePlugin)
-        .add_plugin(MenuPlugin)
-        .run();
-}
+#[bevy_main]
+pub fn main() {
+    let mut app = App::new();
 
+    app.add_plugins(DefaultPlugins)
+        .add_state::<GameState>()
+        .add_plugin(GamePlugin)
+        .add_plugin(MenuPlugin);
+
+    app.run();
+}
 
 fn despawn_screen<T: Component>(to_despawn: Query<Entity, With<T>>, mut commands: Commands) {
     for entity in &to_despawn {

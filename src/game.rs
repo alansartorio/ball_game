@@ -17,20 +17,20 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(add_simulation_state.in_schedule(OnEnter(GameState::Game)))
-            .add_system(initialize_camera.in_schedule(OnEnter(GameState::Game)))
-            .add_system(update_simulation.in_set(OnUpdate(GameState::Game)))
-            .add_system(
-                interpolate_simulation
-                    .after(update_simulation)
-                    .in_set(OnUpdate(GameState::Game)),
+        app.add_systems(
+            OnEnter(GameState::Game),
+            (add_simulation_state, initialize_camera),
+        )
+        .add_systems(
+            Update,
+            (
+                update_simulation,
+                interpolate_simulation.after(update_simulation),
+                update_balls.after(interpolate_simulation),
             )
-            .add_system(
-                update_balls
-                    .after(interpolate_simulation)
-                    .in_set(OnUpdate(GameState::Game)),
-            )
-            .add_system(despawn_screen::<OnGame>.in_schedule(OnExit(GameState::Game)));
+                .run_if(in_state(GameState::Game)),
+        )
+        .add_systems(OnExit(GameState::Game), despawn_screen::<OnGame>);
     }
 }
 
@@ -77,7 +77,6 @@ fn add_simulation_state(
                 .with_rotation(Quat::from_rotation_z(PI / 4.0)),
             ..default()
         },
-        Block,
         OnGame,
     ));
 
@@ -162,6 +161,7 @@ fn add_ball(
                 mesh,
                 material: materials.add(ColorMaterial::from(Color::PURPLE)),
                 visibility: Visibility::Hidden,
+                transform: Transform::from_xyz(0.0, 0.0, -0.5),
                 ..default()
             },
             Ball,
@@ -186,7 +186,7 @@ fn add_block(
                 transform: Transform::from_xyz(
                     (block.min_x + block.max_x) as f32 / 2.0,
                     (block.min_y + block.max_y) as f32 / 2.0,
-                    0.0,
+                    -0.5,
                 )
                 .with_rotation(Quat::from_rotation_z(PI / 4.0))
                 .with_scale(Vec3::new(
@@ -279,7 +279,7 @@ fn update_balls(
     mut balls: Query<(&mut Transform, &mut Visibility), With<Ball>>,
 ) {
     for ((mut ball_entity, mut visibility), ball) in balls.iter_mut().zip(&simulation.state.balls) {
-        ball_entity.translation = Vec3::new(ball.position.x as f32, ball.position.y as f32, 0.0);
+        ball_entity.translation = Vec3::new(ball.position.x as f32, ball.position.y as f32, -0.5);
         ball_entity.scale = Vec2::new(ball.radius as f32, ball.radius as f32).extend(1.0);
         *visibility = Visibility::Visible;
     }

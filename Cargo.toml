@@ -14,7 +14,7 @@ nalgebra = "0.32.2"
 approx = "0.5.1"
 
 [dependencies]
-bevy = "0.10.1"
+bevy = {git = "https://github.com/bevyengine/bevy.git"}
 ball_interpolator = { path = "crates/ball_interpolator" }
 ball_simulation = { path = "crates/ball_simulation" }
 nalgebra = { workspace = true }

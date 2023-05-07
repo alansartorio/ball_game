@@ -9,9 +9,9 @@ pub struct MenuPlugin;
 
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(menu_setup.in_schedule(OnEnter(GameState::Menu)))
-            .add_system(menu_action.in_set(OnUpdate(GameState::Menu)))
-            .add_system(despawn_screen::<OnMenu>.in_schedule(OnExit(GameState::Menu)));
+        app.add_systems(OnEnter(GameState::Menu), menu_setup)
+            .add_systems(Update, menu_action.run_if(in_state(GameState::Menu)))
+            .add_systems(OnExit(GameState::Menu), despawn_screen::<OnMenu>);
     }
 }
 
