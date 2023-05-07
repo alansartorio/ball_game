@@ -23,6 +23,9 @@ pub fn main() {
         .add_plugin(GamePlugin)
         .add_plugin(MenuPlugin);
 
+    #[cfg(target_os = "android")]
+    app.insert_resource(Msaa::Off);
+
     app.run();
 }
 
