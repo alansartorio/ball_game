@@ -1,3 +1,4 @@
+use bevy::time::Stopwatch;
 use nalgebra::Vector2;
 use std::f32::consts::PI;
 use std::ops::{Add, Div, Mul};
@@ -24,6 +25,7 @@ impl Plugin for GamePlugin {
         .add_systems(
             Update,
             (
+                update_watch.before(update_simulation),
                 update_simulation,
                 interpolate_simulation.after(update_simulation),
                 update_balls.after(interpolate_simulation),
@@ -60,6 +62,9 @@ struct Block;
 #[derive(Component)]
 struct BallMesh;
 
+#[derive(Component)]
+struct SimulationWatch(Stopwatch);
+
 fn add_simulation_state(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -79,6 +84,8 @@ fn add_simulation_state(
         },
         OnGame,
     ));
+
+    commands.spawn((SimulationWatch(Stopwatch::new()), OnGame));
 
     for y in 6..=10 {
         let y = y as f64 / 11.0;
@@ -203,8 +210,12 @@ fn add_block(
     block_ids.0.push(id);
 }
 
+fn update_watch(time: Res<Time>, mut watch: Query<&mut SimulationWatch>) {
+    watch.single_mut().0.tick(time.delta());
+}
+
 fn update_simulation(
-    time: Res<Time>,
+    time: Query<&SimulationWatch>,
     mut simulation: ResMut<Simulation>,
     mut ball_ids: ResMut<BallEntities>,
     mut block_ids: ResMut<BlockEntities>,
@@ -213,6 +224,8 @@ fn update_simulation(
     ball_mesh: Query<&Mesh2dHandle, With<BallMesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
+    let time = time.single();
+
     while let Some((next_state, next_event)) = {
         let time = simulation.state.time;
         if simulation.next.is_none() {
@@ -223,7 +236,7 @@ fn update_simulation(
             simulation.next = simulation.state.clone().next(spawn_event.as_slice());
         }
         simulation.next.as_ref()
-    } && time.elapsed_seconds() as f64 >= next_state.time {
+    } && time.0.elapsed_secs_f64() >= next_state.time {
         let next_state = next_state.clone();
         let next_event = *next_event;
 
@@ -259,11 +272,12 @@ fn update_simulation(
 }
 
 fn interpolate_simulation(
-    time: Res<Time>,
+    time: Query<&SimulationWatch>,
     simulation: ResMut<Simulation>,
     mut interpolated_simulation: ResMut<InterpolatedSimulation>,
 ) {
-    let advance = time.elapsed_seconds() as f64 - interpolated_simulation.state.time;
+    let time = time.single();
+    let advance = time.0.elapsed_secs_f64() - interpolated_simulation.state.time;
     for (mut ball, initial_ball) in interpolated_simulation
         .state
         .balls
