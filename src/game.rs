@@ -8,6 +8,7 @@ use std::f32::consts::PI;
 use crate::{despawn_screen, GameState};
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
+use nalgebra::Vector2;
 use ndarray::Array2;
 
 use self::accept_user_input::AcceptUserInputPlugin;
@@ -33,6 +34,7 @@ struct BoardState {
     blocks: Array2<bool>,
     ball_count: usize,
     launcher_position: f64,
+    direction: Vector2<f64>,
 }
 
 impl Plugin for GamePlugin {
@@ -86,6 +88,7 @@ fn initialize_game_state(mut commands: Commands) {
             blocks: Array2::default((10, 10)),
             ball_count: 1,
             launcher_position: 0.5,
+            direction: Vector2::zeros(),
         },
         OnGame,
     ));

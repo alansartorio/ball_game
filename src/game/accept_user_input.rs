@@ -1,4 +1,7 @@
-use bevy::prelude::*;
+use std::f32::consts::PI;
+
+use bevy::{math::vec2, prelude::*, sprite::MaterialMesh2dBundle};
+use nalgebra::Vector2;
 
 use crate::despawn_screen;
 
@@ -20,7 +23,8 @@ impl Plugin for AcceptUserInputPlugin {
         )
         .add_systems(
             Update,
-            update.run_if(in_state(InnerGameState::AcceptUserInput)),
+            (update, update_indicator.after(update))
+                .run_if(in_state(InnerGameState::AcceptUserInput)),
         )
         .add_systems(
             OnExit(InnerGameState::AcceptUserInput),
@@ -33,10 +37,12 @@ impl Plugin for AcceptUserInputPlugin {
 struct BlockEntities(Vec<Entity>);
 
 #[derive(Component, Default)]
-struct BallEntities(Vec<Entity>);
+struct BlocksParent;
 
 #[derive(Component, Default)]
-struct BlocksParent;
+struct AimIndicator {
+    direction: Option<Vector2<f64>>,
+}
 
 fn generate_graphic_blocks(
     mut commands: Commands,
@@ -70,13 +76,65 @@ fn generate_graphic_blocks(
     );
 
     commands.spawn((block_ids, OnAcceptUserInput));
+
+    commands
+        .spawn((
+            SpatialBundle {
+                visibility: Visibility::Hidden,
+                transform: Transform::from_xyz(0.5, 0.0, -0.5),
+                ..default()
+            },
+            AimIndicator::default(),
+            OnAcceptUserInput,
+        ))
+        .with_children(|parent| {
+            parent.spawn((MaterialMesh2dBundle {
+                mesh: meshes.add(shape::Quad::new(vec2(0.25, 0.02)).into()).into(),
+                material: materials.add(ColorMaterial::from(Color::WHITE)),
+                transform: Transform::from_xyz(0.125, 0.0, 0.0),
+                ..default()
+            },));
+        });
 }
 
 fn update(
     buttons: Res<Input<MouseButton>>,
+    window: Query<&Window>,
     mut inner_game_state: ResMut<NextState<InnerGameState>>,
+    camera_q: Query<(&Camera, &GlobalTransform)>,
+    mut board_state: Query<&mut BoardState>,
+    mut aim_indicator: Query<&mut AimIndicator>,
 ) {
+    if buttons.pressed(MouseButton::Left) {
+        let (camera, camera_transform) = camera_q.single();
+        let world_position = camera
+            .viewport_to_world(camera_transform, window.single().cursor_position().unwrap())
+            .unwrap()
+            .origin
+            .truncate();
+
+        if world_position.y > 0.0 {
+            let start = Vector2::new(board_state.single().launcher_position, 0.0);
+            let end = Vector2::new(world_position.x, world_position.y).cast();
+
+            let delta = (end - start).normalize();
+
+            aim_indicator.single_mut().direction = Some(delta);
+        }
+    }
+
     if buttons.just_released(MouseButton::Left) {
+        board_state.single_mut().direction = aim_indicator.single().direction.unwrap();
         inner_game_state.set(InnerGameState::PlaySimulation);
+    }
+}
+
+fn update_indicator(mut aim_indicator: Query<(&AimIndicator, &mut Transform, &mut Visibility)>) {
+    if let Some(direction) = aim_indicator.single().0.direction {
+        let angle = f64::atan2(direction.y, direction.x) as f32;
+        aim_indicator.single_mut().1.rotation = Quat::from_rotation_z(angle);
+        *aim_indicator.single_mut().2 = Visibility::Visible;
+    } else {
+        *aim_indicator.single_mut().2 = Visibility::Hidden;
     }
 }
