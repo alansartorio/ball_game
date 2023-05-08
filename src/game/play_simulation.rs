@@ -40,21 +40,21 @@ impl Plugin for PlaySimulationPlugin {
     }
 }
 
-#[derive(Resource)]
+#[derive(Component)]
 struct Simulation {
     state: SimulationState,
     next: Option<(SimulationState, ball_simulation::Event<EventType>)>,
 }
 
-#[derive(Resource)]
+#[derive(Component)]
 struct InterpolatedSimulation {
     state: SimulationState,
 }
 
-#[derive(Resource, Default)]
+#[derive(Component, Default)]
 struct BlockEntities(Vec<Entity>);
 
-#[derive(Resource, Default)]
+#[derive(Component, Default)]
 struct BallEntities(Vec<Entity>);
 
 #[derive(Component)]
@@ -98,10 +98,13 @@ fn add_simulation_state(
         balls: vec![],
         blocks,
     };
-    commands.insert_resource(Simulation {
-        state: simulation_state.clone(),
-        next: None,
-    });
+    commands.spawn((
+        Simulation {
+            state: simulation_state.clone(),
+            next: None,
+        },
+        OnPlaySimulation,
+    ));
     let mut block_ids = BlockEntities::default();
     add_blocks_from_state(
         &simulation_state,
@@ -110,12 +113,15 @@ fn add_simulation_state(
         &mut meshes,
         &mut materials,
     );
-    commands.insert_resource(block_ids);
+    commands.spawn((block_ids, OnPlaySimulation));
     let ball_ids = BallEntities::default();
-    commands.insert_resource(ball_ids);
-    commands.insert_resource(InterpolatedSimulation {
-        state: simulation_state,
-    });
+    commands.spawn((ball_ids, OnPlaySimulation));
+    commands.spawn((
+        InterpolatedSimulation {
+            state: simulation_state,
+        },
+        OnPlaySimulation,
+    ));
     commands.spawn((
         Mesh2dHandle::from(meshes.add(shape::Circle::new(1.).into())),
         BallMesh,
@@ -140,7 +146,7 @@ fn add_blocks_from_state(
 
 fn add_ball(
     commands: &mut Commands,
-    ball_ids: &mut ResMut<BallEntities>,
+    ball_ids: &mut BallEntities,
     mesh: Mesh2dHandle,
     materials: &mut ResMut<Assets<ColorMaterial>>,
 ) {
@@ -198,15 +204,19 @@ fn update_watch(time: Res<Time>, mut watch: Query<&mut SimulationWatch>) {
 
 fn update_simulation(
     time: Query<&SimulationWatch>,
-    mut simulation: ResMut<Simulation>,
-    mut ball_ids: ResMut<BallEntities>,
-    mut block_ids: ResMut<BlockEntities>,
-    mut interpolated_simulation: ResMut<InterpolatedSimulation>,
+    mut simulation: Query<&mut Simulation>,
+    mut ball_ids: Query<&mut BallEntities>,
+    mut block_ids: Query<&mut BlockEntities>,
+    mut interpolated_simulation: Query<&mut InterpolatedSimulation>,
     mut commands: Commands,
     ball_mesh: Query<&Mesh2dHandle, With<BallMesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     let time = time.single();
+    let mut ball_ids = ball_ids.single_mut();
+    let mut block_ids = block_ids.single_mut();
+    let mut simulation = simulation.single_mut();
+    let mut interpolated_simulation = interpolated_simulation.single_mut();
 
     while let Some((next_state, next_event)) = {
         let time = simulation.state.time;
@@ -255,9 +265,11 @@ fn update_simulation(
 
 fn interpolate_simulation(
     time: Query<&SimulationWatch>,
-    simulation: ResMut<Simulation>,
-    mut interpolated_simulation: ResMut<InterpolatedSimulation>,
+    simulation: Query<&Simulation>,
+    mut interpolated_simulation: Query<&mut InterpolatedSimulation>,
 ) {
+    let mut interpolated_simulation = interpolated_simulation.single_mut();
+    let simulation = simulation.single();
     let time = time.single();
     let advance = time.0.elapsed_secs_f64() - interpolated_simulation.state.time;
     for (mut ball, initial_ball) in interpolated_simulation
@@ -271,9 +283,10 @@ fn interpolate_simulation(
 }
 
 fn update_balls(
-    simulation: Res<InterpolatedSimulation>,
+    simulation: Query<&InterpolatedSimulation>,
     mut balls: Query<(&mut Transform, &mut Visibility), With<Ball>>,
 ) {
+    let simulation = simulation.single();
     for ((mut ball_entity, mut visibility), ball) in balls.iter_mut().zip(&simulation.state.balls) {
         ball_entity.translation = Vec3::new(ball.position.x as f32, ball.position.y as f32, -0.5);
         ball_entity.scale = Vec2::new(ball.radius as f32, ball.radius as f32).extend(1.0);
