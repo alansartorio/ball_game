@@ -39,6 +39,7 @@ impl Plugin for PlaySimulationPlugin {
 
 #[derive(Component)]
 struct Simulation {
+    balls_left: usize,
     state: SimulationState,
     next: Option<(SimulationState, ball_simulation::Event<EventType>)>,
 }
@@ -88,6 +89,7 @@ fn add_simulation_state(
         Simulation {
             state: simulation_state.clone(),
             next: None,
+            balls_left: board_state.single().ball_count,
         },
         OnPlaySimulation,
     ));
@@ -142,7 +144,7 @@ fn update_simulation(
     while let Some((next_state, next_event)) = {
         let time = simulation.state.time;
         if simulation.next.is_none() {
-            let spawn_event = (time < 10.0).then(||ball_simulation::Event {
+            let spawn_event = (simulation.balls_left > 0).then(||ball_simulation::Event {
                 time: time.mul(6.0).floor().add(1.0).div(6.0) - time,
                 data: EventType::Custom,
             });
@@ -164,6 +166,7 @@ fn update_simulation(
                 velocity: Vector2::new(0.2, 0.02) * 10.0,
                 radius: 0.01,
             });
+            simulation.balls_left -= 1;
             add_ball(
                 &mut commands,
                 &mut ball_ids.0,
