@@ -130,8 +130,10 @@ fn update(
     }
 
     if touches.any_just_released() || buttons.just_released(MouseButton::Left) {
-        board_state.single_mut().direction = aim_indicator.single().direction.unwrap();
-        inner_game_state.set(InnerGameState::PlaySimulation);
+        if let Some(direction) = aim_indicator.single().direction {
+            board_state.single_mut().direction = direction;
+            inner_game_state.set(InnerGameState::PlaySimulation);
+        }
     }
 }
 
