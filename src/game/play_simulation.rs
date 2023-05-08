@@ -188,7 +188,7 @@ fn update_simulation(
             let spawn_direction = simulation.spawn_direction;
             simulation.state.balls.push(ball_simulation::Ball {
                 position: Vector2::new(0.5, 0.0),
-                velocity: spawn_direction,
+                velocity: spawn_direction * 2.0,
                 radius: 0.02,
             });
             simulation.balls_left -= 1;
