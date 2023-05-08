@@ -24,6 +24,7 @@ impl Plugin for PlaySimulationPlugin {
             ((
                 update_watch.before(update_simulation),
                 update_simulation,
+                handle_stop.after(update_simulation),
                 interpolate_simulation.after(update_simulation),
                 update_balls.after(interpolate_simulation),
             )
@@ -156,7 +157,6 @@ fn update_simulation(
     mut commands: Commands,
     ball_mesh: Query<&Mesh2dHandle, With<BallMesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    mut inner_game_state: ResMut<NextState<InnerGameState>>,
     blocks_parent: Query<Entity, With<BlocksParent>>,
     mut block_positions: Query<&mut BlockPositions>,
 ) {
@@ -216,10 +216,6 @@ fn update_simulation(
 
         interpolated_simulation.state = simulation.state.clone();
     }
-
-    if simulation.next.is_none() {
-        inner_game_state.set(InnerGameState::AnimateBlocksIn);
-    }
 }
 
 fn interpolate_simulation(
@@ -238,6 +234,16 @@ fn interpolate_simulation(
         .zip(&simulation.state.balls)
     {
         ball.position = initial_ball.position + initial_ball.velocity * advance;
+    }
+}
+
+fn handle_stop(
+    keys: Res<Input<KeyCode>>,
+    simulation: Query<&Simulation>,
+    mut inner_game_state: ResMut<NextState<InnerGameState>>,
+) {
+    if simulation.single().next.is_none() || keys.just_pressed(KeyCode::Space) {
+        inner_game_state.set(InnerGameState::AnimateBlocksIn);
     }
 }
 
