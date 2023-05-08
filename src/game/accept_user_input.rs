@@ -99,16 +99,24 @@ fn generate_graphic_blocks(
 
 fn update(
     buttons: Res<Input<MouseButton>>,
+    touches: Res<Touches>,
     window: Query<&Window>,
     mut inner_game_state: ResMut<NextState<InnerGameState>>,
     camera_q: Query<(&Camera, &GlobalTransform)>,
     mut board_state: Query<&mut BoardState>,
     mut aim_indicator: Query<&mut AimIndicator>,
 ) {
-    if buttons.pressed(MouseButton::Left) {
+    let touch = touches.iter().map(|e| e.position()).last();
+    let mouse = || {
+        buttons
+            .pressed(MouseButton::Left)
+            .then(|| window.single().cursor_position())
+            .flatten()
+    };
+    if let Some(position) = touch.or_else(mouse) {
         let (camera, camera_transform) = camera_q.single();
         let world_position = camera
-            .viewport_to_world(camera_transform, window.single().cursor_position().unwrap())
+            .viewport_to_world(camera_transform, position)
             .unwrap()
             .origin
             .truncate();
@@ -123,7 +131,7 @@ fn update(
         }
     }
 
-    if buttons.just_released(MouseButton::Left) {
+    if touches.any_just_released() || buttons.just_released(MouseButton::Left) {
         board_state.single_mut().direction = aim_indicator.single().direction.unwrap();
         inner_game_state.set(InnerGameState::PlaySimulation);
     }
