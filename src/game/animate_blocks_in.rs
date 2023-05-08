@@ -98,7 +98,7 @@ fn generate_graphic_blocks(
     commands.spawn((block_ids, OnAnimateBlocksIn));
 
     commands.spawn((
-        AnimationTimer(Timer::from_seconds(1.0, TimerMode::Once)),
+        AnimationTimer(Timer::from_seconds(2.0, TimerMode::Once)),
         OnAnimateBlocksIn,
     ));
 }
@@ -118,6 +118,6 @@ fn animate(
     blocks_parent.single_mut().translation.y = easing * 1.0 / 11.0;
 
     if timer.finished() {
-        inner_game_state.set(InnerGameState::PlaySimulation);
+        inner_game_state.set(InnerGameState::AcceptUserInput);
     }
 }
