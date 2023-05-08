@@ -1,6 +1,7 @@
 mod accept_user_input;
 mod animate_blocks_in;
 mod play_simulation;
+mod utils;
 
 use std::f32::consts::PI;
 
@@ -57,7 +58,7 @@ impl Plugin for GamePlugin {
 }
 
 fn game_setup(mut inner_game_state: ResMut<NextState<InnerGameState>>) {
-    inner_game_state.set(InnerGameState::PlaySimulation);
+    inner_game_state.set(InnerGameState::AnimateBlocksIn);
 }
 
 fn add_game_rectangle(

@@ -1,3 +1,4 @@
+use super::utils::{add_ball, add_blocks_from_state, get_block, Ball, Block};
 use super::{BoardState, InnerGameState};
 use crate::{despawn_screen, GameState};
 use ball_simulation::SimulationState;
@@ -58,12 +59,6 @@ struct BlockEntities(Vec<Entity>);
 struct BallEntities(Vec<Entity>);
 
 #[derive(Component)]
-struct Ball;
-
-#[derive(Component)]
-struct Block;
-
-#[derive(Component)]
 struct BallMesh;
 
 #[derive(Component)]
@@ -75,20 +70,15 @@ fn add_simulation_state(
     mut materials: ResMut<Assets<ColorMaterial>>,
     board_state: Query<&BoardState>,
 ) {
-    let mut blocks = vec![];
-
     commands.spawn((SimulationWatch(Stopwatch::new()), OnPlaySimulation));
 
+    let mut blocks = vec![];
+
+    let [h, w]: [usize; 2] = board_state.single().blocks.shape().try_into().unwrap();
     for ((y, x), &has_block) in board_state.single().blocks.indexed_iter() {
         if has_block {
-            let y = y as f64 / 11.0;
-            let x = x as f64 / 11.0;
-            blocks.push(ball_simulation::Block {
-                min_y: y - 0.04,
-                max_y: y + 0.04,
-                min_x: x - 0.04,
-                max_x: x + 0.04,
-            });
+            println!("{x} {y}");
+            blocks.push(get_block(w, h, x, y));
         }
     }
 
@@ -107,12 +97,16 @@ fn add_simulation_state(
         OnPlaySimulation,
     ));
     let mut block_ids = BlockEntities::default();
+    let blocks_parent = commands
+        .spawn((SpatialBundle::INHERITED_IDENTITY, OnPlaySimulation))
+        .id();
     add_blocks_from_state(
-        &simulation_state,
-        &mut block_ids,
+        &simulation_state.blocks,
+        &mut block_ids.0,
         &mut commands,
         &mut meshes,
         &mut materials,
+        blocks_parent,
     );
     commands.spawn((block_ids, OnPlaySimulation));
     let ball_ids = BallEntities::default();
@@ -128,75 +122,6 @@ fn add_simulation_state(
         BallMesh,
         OnPlaySimulation,
     ));
-}
-
-fn add_blocks_from_state(
-    simulation: &SimulationState,
-    block_ids: &mut BlockEntities,
-    commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<ColorMaterial>>,
-) {
-    let block_mesh: Mesh2dHandle = meshes
-        .add(shape::RegularPolygon::new(2f32.sqrt() / 2.0, 4).into())
-        .into();
-    for block in &simulation.blocks {
-        add_block(commands, block_ids, block_mesh.clone(), materials, *block);
-    }
-}
-
-fn add_ball(
-    commands: &mut Commands,
-    ball_ids: &mut BallEntities,
-    mesh: Mesh2dHandle,
-    materials: &mut ResMut<Assets<ColorMaterial>>,
-) {
-    let id = commands
-        .spawn((
-            MaterialMesh2dBundle {
-                mesh,
-                material: materials.add(ColorMaterial::from(Color::PURPLE)),
-                visibility: Visibility::Hidden,
-                transform: Transform::from_xyz(0.0, 0.0, -0.5),
-                ..default()
-            },
-            Ball,
-            OnPlaySimulation,
-        ))
-        .id();
-    ball_ids.0.push(id);
-}
-
-fn add_block(
-    commands: &mut Commands,
-    block_ids: &mut BlockEntities,
-    mesh: Mesh2dHandle,
-    materials: &mut ResMut<Assets<ColorMaterial>>,
-    block: ball_simulation::Block,
-) {
-    let id = commands
-        .spawn((
-            MaterialMesh2dBundle {
-                mesh,
-                material: materials.add(ColorMaterial::from(Color::WHITE)),
-                transform: Transform::from_xyz(
-                    (block.min_x + block.max_x) as f32 / 2.0,
-                    (block.min_y + block.max_y) as f32 / 2.0,
-                    -0.5,
-                )
-                .with_rotation(Quat::from_rotation_z(PI / 4.0))
-                .with_scale(Vec3::new(
-                    (block.max_x - block.min_x) as f32,
-                    (block.max_y - block.min_y) as f32,
-                    1.0,
-                )),
-                ..default()
-            },
-            Block,
-            OnPlaySimulation,
-        ))
-        .id();
-    block_ids.0.push(id);
 }
 
 fn update_watch(time: Res<Time>, mut watch: Query<&mut SimulationWatch>) {
@@ -246,9 +171,10 @@ fn update_simulation(
             });
             add_ball(
                 &mut commands,
-                &mut ball_ids,
+                &mut ball_ids.0,
                 ball_mesh.get_single().unwrap().clone(),
                 &mut materials,
+                OnPlaySimulation
             );
         } else if let EventType::Collision(CollisionData { ball, against }) = next_event.data {
             if let CollisionType::Wall(WallType::YNegative) = against {
