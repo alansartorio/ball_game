@@ -49,7 +49,6 @@ fn generate_new_blocks(mut board_state: Query<&mut BoardState>) {
     for block in blocks.iter_mut() {
         *block = (0.0..=1.0).sample_single(&mut rng) > 0.5;
     }
-    println!("{blocks:?}");
 
     board_state
         .blocks
@@ -57,8 +56,6 @@ fn generate_new_blocks(mut board_state: Query<&mut BoardState>) {
         .unwrap();
 
     board_state.blocks.remove_index(Axis(0), 0);
-    
-    println!("{:?}", board_state.blocks);
 }
 
 fn generate_graphic_blocks(

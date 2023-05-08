@@ -1,15 +1,11 @@
-use super::utils::{add_ball, add_blocks_from_state, get_block, Ball, Block};
+use super::utils::{add_ball, add_blocks_from_state, get_block, Ball};
 use super::{BoardState, InnerGameState};
 use crate::{despawn_screen, GameState};
 use ball_simulation::SimulationState;
 use ball_simulation::*;
 use bevy::time::Stopwatch;
-use bevy::{
-    prelude::*,
-    sprite::{MaterialMesh2dBundle, Mesh2dHandle},
-};
+use bevy::{prelude::*, sprite::Mesh2dHandle};
 use nalgebra::Vector2;
-use std::f32::consts::PI;
 use std::ops::{Add, Div, Mul};
 
 pub struct PlaySimulationPlugin;
@@ -77,7 +73,6 @@ fn add_simulation_state(
     let [h, w]: [usize; 2] = board_state.single().blocks.shape().try_into().unwrap();
     for ((y, x), &has_block) in board_state.single().blocks.indexed_iter() {
         if has_block {
-            println!("{x} {y}");
             blocks.push(get_block(w, h, x, y));
         }
     }
