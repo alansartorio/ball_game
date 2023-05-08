@@ -1,8 +1,6 @@
 use bevy::prelude::Color;
 use lazy_static::lazy_static;
 
-
-
 lazy_static! {
     pub(crate) static ref GLOBAL_BACKGROUND: Color = Color::hex("d8dee9").unwrap();
     pub(crate) static ref BACKGROUND: Color = Color::hex("2e3440").unwrap();

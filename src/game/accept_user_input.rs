@@ -1,7 +1,7 @@
 use bevy::{math::vec2, prelude::*, sprite::MaterialMesh2dBundle};
 use nalgebra::Vector2;
 
-use crate::{despawn_screen, colors};
+use crate::{colors, despawn_screen};
 
 use super::{
     utils::{add_blocks_from_state, get_block},

@@ -5,7 +5,7 @@ mod utils;
 
 use std::f32::consts::PI;
 
-use crate::{despawn_screen, GameState, colors};
+use crate::{colors, despawn_screen, GameState};
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
 use nalgebra::Vector2;

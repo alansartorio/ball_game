@@ -1,9 +1,9 @@
 #![feature(let_chains)]
 #![feature(option_as_slice)]
 
+mod colors;
 mod game;
 mod menu;
-mod colors;
 
 use bevy::prelude::*;
 
