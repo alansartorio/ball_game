@@ -166,7 +166,6 @@ fn update_simulation(
 
         simulation.state = next_state.clone();
         simulation.next = None;
-        interpolated_simulation.state = simulation.state.clone();
         //println!("Time: {} | Event: {:?}", simulation.state.time, event);
 
         if let EventType::Custom = next_event.data {
@@ -195,6 +194,8 @@ fn update_simulation(
                 simulation.state.blocks.remove(index);
             }
         }
+
+        interpolated_simulation.state = simulation.state.clone();
     }
 
     if simulation.next.is_none() {
