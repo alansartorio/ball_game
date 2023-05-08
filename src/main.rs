@@ -18,10 +18,16 @@ pub enum GameState {
 pub fn main() {
     let mut app = App::new();
 
-    app.add_plugins(DefaultPlugins)
-        .add_state::<GameState>()
-        .add_plugin(GamePlugin)
-        .add_plugin(MenuPlugin);
+    app.add_plugins(DefaultPlugins.set(WindowPlugin {
+        primary_window: Some(Window {
+            fit_canvas_to_parent: true,
+            ..default()
+        }),
+        ..default()
+    }))
+    .add_state::<GameState>()
+    .add_plugin(GamePlugin)
+    .add_plugin(MenuPlugin);
 
     app.run();
 }
