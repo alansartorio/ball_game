@@ -1,4 +1,4 @@
-use super::InnerGameState;
+use super::{BoardState, InnerGameState};
 use crate::{despawn_screen, GameState};
 use ball_simulation::SimulationState;
 use ball_simulation::*;
@@ -73,14 +73,15 @@ fn add_simulation_state(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    board_state: Query<&BoardState>,
 ) {
     let mut blocks = vec![];
 
     commands.spawn((SimulationWatch(Stopwatch::new()), OnPlaySimulation));
 
-    for y in 6..=10 {
-        let y = y as f64 / 11.0;
-        for x in 1..=10 {
+    for ((y, x), &has_block) in board_state.single().blocks.indexed_iter() {
+        if has_block {
+            let y = y as f64 / 11.0;
             let x = x as f64 / 11.0;
             blocks.push(ball_simulation::Block {
                 min_y: y - 0.04,
