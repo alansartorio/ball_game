@@ -1,5 +1,3 @@
-use std::f32::consts::PI;
-
 use bevy::{math::vec2, prelude::*, sprite::MaterialMesh2dBundle};
 use nalgebra::Vector2;
 
