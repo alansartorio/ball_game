@@ -32,7 +32,10 @@ impl Plugin for PlaySimulationPlugin {
         )
         .add_systems(
             OnExit(InnerGameState::PlaySimulation),
-            despawn_screen::<OnPlaySimulation>,
+            (
+                save_state,
+                despawn_screen::<OnPlaySimulation>.after(save_state),
+            ),
         );
     }
 }
@@ -51,6 +54,9 @@ struct InterpolatedSimulation {
 
 #[derive(Component, Default)]
 struct BlockEntities(Vec<Entity>);
+
+#[derive(Component, Default)]
+struct BlockPositions(Vec<Vector2<usize>>);
 
 #[derive(Component, Default)]
 struct BallEntities(Vec<Entity>);
@@ -72,14 +78,18 @@ fn add_simulation_state(
 ) {
     commands.spawn((SimulationWatch(Stopwatch::new()), OnPlaySimulation));
 
+    let mut block_positions = BlockPositions::default();
     let mut blocks = vec![];
 
     let [h, w]: [usize; 2] = board_state.single().blocks.shape().try_into().unwrap();
     for ((y, x), &has_block) in board_state.single().blocks.indexed_iter() {
         if has_block {
             blocks.push(get_block(w, h, x, y));
+            block_positions.0.push(Vector2::new(x, y));
         }
     }
+
+    commands.spawn((block_positions, OnPlaySimulation));
 
     let simulation_state = SimulationState {
         time: 0.0,
@@ -96,6 +106,7 @@ fn add_simulation_state(
         },
         OnPlaySimulation,
     ));
+
     let mut block_ids = BlockEntities::default();
     let blocks_parent = commands
         .spawn((
@@ -143,6 +154,7 @@ fn update_simulation(
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut inner_game_state: ResMut<NextState<InnerGameState>>,
     blocks_parent: Query<Entity, With<BlocksParent>>,
+    mut block_positions: Query<&mut BlockPositions>,
 ) {
     let time = time.single();
     let mut ball_ids = ball_ids.single_mut();
@@ -192,6 +204,7 @@ fn update_simulation(
                 commands.entity(blocks_parent.single()).remove_children(&[entity_index]);
                 commands.entity(entity_index).despawn();
                 simulation.state.blocks.remove(index);
+                block_positions.single_mut().0.remove(index);
             }
         }
 
@@ -231,5 +244,18 @@ fn update_balls(
         ball_entity.translation = Vec3::new(ball.position.x as f32, ball.position.y as f32, -0.5);
         ball_entity.scale = Vec2::new(ball.radius as f32, ball.radius as f32).extend(1.0);
         *visibility = Visibility::Visible;
+    }
+}
+
+fn save_state(block_positions: Query<&BlockPositions>, mut board_state: Query<&mut BoardState>) {
+    let block_positions = block_positions.single();
+    let board_state = &mut board_state.single_mut();
+
+    for has_block in board_state.blocks.iter_mut() {
+        *has_block = false;
+    }
+
+    for block_position in &block_positions.0 {
+        board_state.blocks[(block_position.y, block_position.x)] = true;
     }
 }
