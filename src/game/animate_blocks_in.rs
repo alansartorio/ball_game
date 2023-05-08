@@ -6,7 +6,7 @@ use simple_easing::cubic_out;
 use crate::despawn_screen;
 
 use super::{
-    utils::{add_blocks_from_state, get_block, get_block_separations, Block},
+    utils::{add_blocks_from_state, get_block, get_block_separations},
     BoardState, InnerGameState,
 };
 
