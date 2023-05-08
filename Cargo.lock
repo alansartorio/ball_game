@@ -282,6 +282,7 @@ dependencies = [
  "ball_interpolator",
  "ball_simulation",
  "bevy",
+ "lazy_static",
  "nalgebra",
  "ndarray",
  "rand",

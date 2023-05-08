@@ -1,7 +1,7 @@
 use bevy::{math::vec2, prelude::*, sprite::MaterialMesh2dBundle};
 use nalgebra::Vector2;
 
-use crate::despawn_screen;
+use crate::{despawn_screen, colors};
 
 use super::{
     utils::{add_blocks_from_state, get_block},
@@ -88,7 +88,7 @@ fn generate_graphic_blocks(
         .with_children(|parent| {
             parent.spawn((MaterialMesh2dBundle {
                 mesh: meshes.add(shape::Quad::new(vec2(0.25, 0.02)).into()).into(),
-                material: materials.add(ColorMaterial::from(Color::WHITE)),
+                material: materials.add(ColorMaterial::from(*colors::BLOCKS)),
                 transform: Transform::from_xyz(0.125, 0.0, 0.0),
                 ..default()
             },));

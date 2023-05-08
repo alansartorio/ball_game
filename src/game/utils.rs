@@ -6,6 +6,8 @@ use bevy::{
 };
 use nalgebra::Vector2;
 
+use crate::colors;
+
 pub(crate) fn get_block_separations(columns: usize, rows: usize) -> Vector2<f64> {
     let y = 1.0 / (rows as f64 + 1.0);
     let x = 1.0 / (columns as f64 + 1.0);
@@ -41,7 +43,7 @@ fn add_block(
         .spawn((
             MaterialMesh2dBundle {
                 mesh,
-                material: materials.add(ColorMaterial::from(Color::WHITE)),
+                material: materials.add(ColorMaterial::from(*colors::BLOCKS)),
                 transform: Transform::from_xyz(
                     (block.min_x + block.max_x) as f32 / 2.0,
                     (block.min_y + block.max_y) as f32 / 2.0,
@@ -96,7 +98,7 @@ pub(crate) fn add_ball<State: Component>(
         .spawn((
             MaterialMesh2dBundle {
                 mesh,
-                material: materials.add(ColorMaterial::from(Color::PURPLE)),
+                material: materials.add(ColorMaterial::from(*colors::BALLS)),
                 visibility: Visibility::Hidden,
                 transform: Transform::from_xyz(0.0, 0.0, -0.5),
                 ..default()

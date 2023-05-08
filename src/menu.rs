@@ -1,6 +1,6 @@
 use bevy::{app::AppExit, prelude::*};
 
-use crate::{despawn_screen, GameState};
+use crate::{despawn_screen, GameState, colors};
 
 #[derive(Component)]
 pub struct OnMenu;
@@ -27,7 +27,7 @@ fn menu_setup(mut commands: Commands, assets: Res<AssetServer>) {
 
     let button_text_style = TextStyle {
         font_size: 30.0,
-        color: Color::BLACK,
+        color: *colors::LIGHT_TEXT,
         font: font.clone(),
     };
 
@@ -51,7 +51,7 @@ fn menu_setup(mut commands: Commands, assets: Res<AssetServer>) {
                     "Test Menu",
                     TextStyle {
                         font_size: 40.0,
-                        color: Color::WHITE,
+                        color: *colors::DARK_TEXT,
                         font,
                     },
                 )
@@ -67,7 +67,7 @@ fn menu_setup(mut commands: Commands, assets: Res<AssetServer>) {
                             margin: UiRect::all(Val::Px(20.0)),
                             ..default()
                         },
-                        background_color: Color::WHITE.into(),
+                        background_color: (*colors::BUTTON_BACKGROUND).into(),
                         ..default()
                     },
                     MenuButtonAction::Play,
@@ -82,7 +82,7 @@ fn menu_setup(mut commands: Commands, assets: Res<AssetServer>) {
                             margin: UiRect::all(Val::Px(20.0)),
                             ..default()
                         },
-                        background_color: Color::WHITE.into(),
+                        background_color: (*colors::BUTTON_BACKGROUND).into(),
                         ..default()
                     },
                     MenuButtonAction::Quit,

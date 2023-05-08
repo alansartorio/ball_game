@@ -5,7 +5,7 @@ mod utils;
 
 use std::f32::consts::PI;
 
-use crate::{despawn_screen, GameState};
+use crate::{despawn_screen, GameState, colors};
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
 use nalgebra::Vector2;
@@ -73,7 +73,7 @@ fn add_game_rectangle(
             mesh: meshes
                 .add(shape::RegularPolygon::new(2f32.sqrt() / 2.0, 4).into())
                 .into(),
-            material: materials.add(ColorMaterial::from(Color::BLACK)),
+            material: materials.add(ColorMaterial::from(*colors::BACKGROUND)),
             transform: Transform::from_xyz(0.5, 0.5, -1.0)
                 .with_rotation(Quat::from_rotation_z(PI / 4.0)),
             ..default()
