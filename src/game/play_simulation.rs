@@ -1,4 +1,4 @@
-use super::utils::{add_ball, add_blocks_from_state, get_block, Ball, Block};
+use super::utils::{add_ball, add_blocks_from_state, get_block, Ball, Block, Lives};
 use super::{BoardState, InnerGameState};
 use crate::{despawn_screen, GameState};
 use ball_simulation::SimulationState;
@@ -85,9 +85,9 @@ fn add_simulation_state(
     let mut blocks = vec![];
 
     let [h, w]: [usize; 2] = board_state.single().blocks.shape().try_into().unwrap();
-    for ((y, x), &has_block) in board_state.single().blocks.indexed_iter() {
-        if has_block {
-            blocks.push(get_block(w, h, x, y));
+    for ((y, x), &lives) in board_state.single().blocks.indexed_iter() {
+        if lives > 1 {
+            blocks.push((get_block(w, h, x, y), lives));
             block_positions.push(Vector2::new(x, y));
         }
     }
@@ -97,7 +97,7 @@ fn add_simulation_state(
         space_width: 1.0,
         space_height: 1.0,
         balls: vec![],
-        blocks,
+        blocks: blocks.iter().map(|&(block, _)| block).collect(),
     };
     commands.spawn((
         Simulation {
@@ -119,7 +119,7 @@ fn add_simulation_state(
         ))
         .id();
     let block_entities = add_blocks_from_state(
-        &simulation_state.blocks,
+        &blocks,
         &mut block_ids.0,
         &mut commands,
         &mut meshes,
@@ -127,7 +127,9 @@ fn add_simulation_state(
         blocks_parent,
     );
     for (block_entity, position) in block_entities.into_iter().zip(block_positions) {
-        commands.entity(block_entity).insert(GridPosition(position));
+        commands
+            .entity(block_entity)
+            .insert(GridPosition(position));
     }
     commands.spawn((block_ids, OnPlaySimulation));
     let ball_ids = BallEntities::default();
@@ -259,7 +261,7 @@ fn update_balls(
 }
 
 fn save_state(
-    block_positions: Query<&GridPosition, With<Block>>,
+    blocks: Query<(&GridPosition, &Lives), With<Block>>,
     mut board_state: Query<&mut BoardState>,
     simulation: Query<&Simulation>,
 ) {
@@ -267,11 +269,11 @@ fn save_state(
     let board_state = &mut board_state.single_mut();
 
     for has_block in board_state.blocks.iter_mut() {
-        *has_block = false;
+        *has_block = 0;
     }
 
     board_state.ball_count += simulation.balls_increment;
-    for block_position in block_positions.iter() {
-        board_state.blocks[(block_position.0.y, block_position.0.x)] = true;
+    for (block_position, lives) in blocks.iter() {
+        board_state.blocks[(block_position.0.y, block_position.0.x)] = lives.0;
     }
 }

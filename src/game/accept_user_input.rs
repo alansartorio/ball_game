@@ -50,9 +50,9 @@ fn generate_graphic_blocks(
 ) {
     let mut blocks = vec![];
     let [h, w]: [usize; 2] = board_state.single().blocks.shape().try_into().unwrap();
-    for ((y, x), &has_block) in board_state.single().blocks.indexed_iter() {
-        if has_block {
-            blocks.push(get_block(w, h, x, y));
+    for ((y, x), &lives) in board_state.single().blocks.indexed_iter() {
+        if lives > 0 {
+            blocks.push((get_block(w, h, x, y), lives));
         }
     }
 

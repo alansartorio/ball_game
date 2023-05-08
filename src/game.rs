@@ -31,7 +31,7 @@ enum InnerGameState {
 
 #[derive(Component)]
 struct BoardState {
-    blocks: Array2<bool>,
+    blocks: Array2<usize>,
     ball_count: usize,
     launcher_position: f64,
     direction: Vector2<f64>,

@@ -26,6 +26,9 @@ pub(crate) fn get_block(columns: usize, rows: usize, x: usize, y: usize) -> ball
 }
 
 #[derive(Component)]
+pub(crate) struct Lives(pub usize);
+
+#[derive(Component)]
 pub(crate) struct Ball;
 
 #[derive(Component)]
@@ -37,6 +40,7 @@ fn add_block(
     mesh: Mesh2dHandle,
     materials: &mut ResMut<Assets<ColorMaterial>>,
     block: ball_simulation::Block,
+    lives: usize,
     parent: Entity,
 ) -> Entity {
     let id = commands
@@ -57,6 +61,7 @@ fn add_block(
                 )),
                 ..default()
             },
+            Lives(lives),
             Block,
         ))
         .id();
@@ -66,7 +71,7 @@ fn add_block(
 }
 
 pub(crate) fn add_blocks_from_state(
-    blocks: &[ball_simulation::Block],
+    blocks: &[(ball_simulation::Block, usize)],
     block_ids: &mut Vec<Entity>,
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
@@ -79,13 +84,14 @@ pub(crate) fn add_blocks_from_state(
 
     blocks
         .iter()
-        .map(|block| {
+        .map(|&(block, lives)| {
             add_block(
                 commands,
                 block_ids,
                 block_mesh.clone(),
                 materials,
-                *block,
+                block,
+                lives,
                 parent,
             )
         })

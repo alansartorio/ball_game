@@ -52,9 +52,11 @@ fn generate_new_blocks(mut board_state: Query<&mut BoardState>) {
     let mut rng = rand::thread_rng();
 
     let [_h, w]: [usize; 2] = board_state.blocks.shape().try_into().unwrap();
-    let mut blocks = vec![false; w];
+    let mut blocks = vec![0; w];
     for block in blocks.iter_mut() {
-        *block = (0.0..=1.0).sample_single(&mut rng) > 0.5;
+        if (0.0..=1.0).sample_single(&mut rng) > 0.5 {
+            *block = 4;
+        }
     }
 
     board_state
@@ -73,9 +75,9 @@ fn generate_graphic_blocks(
 ) {
     let mut blocks = vec![];
     let [h, w]: [usize; 2] = board_state.single().blocks.shape().try_into().unwrap();
-    for ((y, x), &has_block) in board_state.single().blocks.indexed_iter() {
-        if has_block {
-            blocks.push(get_block(w, h, x, y));
+    for ((y, x), &lives) in board_state.single().blocks.indexed_iter() {
+        if lives > 0 {
+            blocks.push((get_block(w, h, x, y), lives));
         }
     }
 
