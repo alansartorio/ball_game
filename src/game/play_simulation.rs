@@ -189,7 +189,7 @@ fn update_simulation(
             simulation.state.balls.push(ball_simulation::Ball {
                 position: Vector2::new(0.5, 0.0),
                 velocity: spawn_direction,
-                radius: 0.01,
+                radius: 0.02,
             });
             simulation.balls_left -= 1;
             add_ball(
