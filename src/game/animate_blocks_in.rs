@@ -18,7 +18,10 @@ impl Plugin for AnimateBlocksInPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(InnerGameState::AnimateBlocksIn),
-            (generate_new_blocks, generate_graphic_blocks.after(generate_new_blocks)),
+            (
+                generate_new_blocks,
+                generate_graphic_blocks.after(generate_new_blocks),
+            ),
         )
         .add_systems(
             Update,
@@ -94,7 +97,10 @@ fn generate_graphic_blocks(
 
     commands.spawn((block_ids, OnAnimateBlocksIn));
 
-    commands.spawn((AnimationTimer(Timer::from_seconds(1.0, TimerMode::Once)), OnAnimateBlocksIn));
+    commands.spawn((
+        AnimationTimer(Timer::from_seconds(1.0, TimerMode::Once)),
+        OnAnimateBlocksIn,
+    ));
 }
 
 fn animate(
