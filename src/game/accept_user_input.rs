@@ -47,6 +47,7 @@ fn generate_graphic_blocks(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     board_state: Query<&mut BoardState>,
+    assets: Res<AssetServer>,
 ) {
     let mut blocks = vec![];
     let [h, w]: [usize; 2] = board_state.single().blocks.shape().try_into().unwrap();
@@ -71,6 +72,7 @@ fn generate_graphic_blocks(
         &mut meshes,
         &mut materials,
         blocks_parent,
+        assets,
     );
 
     commands.spawn((block_ids, OnAcceptUserInput));

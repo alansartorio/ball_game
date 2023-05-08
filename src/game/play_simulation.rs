@@ -78,6 +78,7 @@ fn add_simulation_state(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     board_state: Query<&BoardState>,
+    assets: Res<AssetServer>,
 ) {
     commands.spawn((SimulationWatch(Stopwatch::new()), OnPlaySimulation));
 
@@ -86,7 +87,7 @@ fn add_simulation_state(
 
     let [h, w]: [usize; 2] = board_state.single().blocks.shape().try_into().unwrap();
     for ((y, x), &lives) in board_state.single().blocks.indexed_iter() {
-        if lives > 1 {
+        if lives > 0 {
             blocks.push((get_block(w, h, x, y), lives));
             block_positions.push(Vector2::new(x, y));
         }
@@ -125,11 +126,10 @@ fn add_simulation_state(
         &mut meshes,
         &mut materials,
         blocks_parent,
+        assets,
     );
     for (block_entity, position) in block_entities.into_iter().zip(block_positions) {
-        commands
-            .entity(block_entity)
-            .insert(GridPosition(position));
+        commands.entity(block_entity).insert(GridPosition(position));
     }
     commands.spawn((block_ids, OnPlaySimulation));
     let ball_ids = BallEntities::default();
@@ -161,6 +161,8 @@ fn update_simulation(
     ball_mesh: Query<&Mesh2dHandle, With<BallMesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     blocks_parent: Query<Entity, With<BlocksParent>>,
+    mut blocks: Query<(&mut Lives, &Children), With<Block>>,
+    mut blocks_texts: Query<&mut Text>,
 ) {
     let time = time.single();
     let mut ball_ids = ball_ids.single_mut();
@@ -207,11 +209,19 @@ fn update_simulation(
                 commands.entity(entity).despawn();
                 simulation.state.balls.remove(ball);
             } else if let CollisionType::Block { index, .. } = against {
-                let entity_index = block_ids.0.remove(index);
-                commands.entity(blocks_parent.single()).remove_children(&[entity_index]);
-                commands.entity(entity_index).despawn();
-                simulation.state.blocks.remove(index);
-                simulation.balls_increment += 1;
+                let hit_entity = block_ids.0[index];
+                let (mut lives, children) = blocks.get_mut(hit_entity).unwrap();
+                lives.0 -= 1;
+                let mut text = blocks_texts.get_mut(*children.into_iter().find(|&&child| blocks_texts.contains(child)).unwrap()).unwrap();
+                text.sections[0].value = lives.0.to_string();
+
+                if lives.0 == 0 {
+                    commands.entity(blocks_parent.single()).remove_children(&[hit_entity]);
+                    commands.entity(hit_entity).despawn_recursive();
+                    simulation.state.blocks.remove(index);
+                    simulation.balls_increment += 1;
+                    block_ids.0.remove(index);
+                }
             }
         }
 
@@ -268,8 +278,8 @@ fn save_state(
     let simulation = simulation.single();
     let board_state = &mut board_state.single_mut();
 
-    for has_block in board_state.blocks.iter_mut() {
-        *has_block = 0;
+    for lives in board_state.blocks.iter_mut() {
+        *lives = 0;
     }
 
     board_state.ball_count += simulation.balls_increment;

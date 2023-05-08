@@ -1,6 +1,7 @@
 use std::f32::consts::PI;
 
 use bevy::{
+    math::{vec2, vec3},
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
@@ -42,7 +43,10 @@ fn add_block(
     block: ball_simulation::Block,
     lives: usize,
     parent: Entity,
+    assets: &Res<AssetServer>,
 ) -> Entity {
+    let font = assets.load::<Font, _>("fonts/OpenSans-Regular.ttf");
+
     let id = commands
         .spawn((
             MaterialMesh2dBundle {
@@ -53,7 +57,6 @@ fn add_block(
                     (block.min_y + block.max_y) as f32 / 2.0,
                     -0.5,
                 )
-                .with_rotation(Quat::from_rotation_z(PI / 4.0))
                 .with_scale(Vec3::new(
                     (block.max_x - block.min_x) as f32,
                     (block.max_y - block.min_y) as f32,
@@ -64,6 +67,20 @@ fn add_block(
             Lives(lives),
             Block,
         ))
+        .with_children(|block| {
+            block.spawn(Text2dBundle {
+                text: Text::from_section(
+                    lives.to_string(),
+                    TextStyle {
+                        font,
+                        font_size: 50.0,
+                        color: *colors::DARK_TEXT,
+                    },
+                ),
+                transform: Transform::from_scale(vec3(0.02, 0.02, 0.02)),
+                ..default()
+            });
+        })
         .id();
     commands.entity(parent).push_children(&[id]);
     block_ids.push(id);
@@ -77,10 +94,9 @@ pub(crate) fn add_blocks_from_state(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<ColorMaterial>>,
     parent: Entity,
+    assets: Res<AssetServer>,
 ) -> Vec<Entity> {
-    let block_mesh: Mesh2dHandle = meshes
-        .add(shape::RegularPolygon::new(2f32.sqrt() / 2.0, 4).into())
-        .into();
+    let block_mesh: Mesh2dHandle = meshes.add(shape::Quad::new(vec2(1.0, 1.0)).into()).into();
 
     blocks
         .iter()
@@ -93,6 +109,7 @@ pub(crate) fn add_blocks_from_state(
                 block,
                 lives,
                 parent,
+                &assets,
             )
         })
         .collect()
