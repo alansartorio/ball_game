@@ -1,6 +1,6 @@
 use bevy::{app::AppExit, prelude::*};
 
-use crate::{despawn_screen, GameState, colors};
+use crate::{colors, despawn_screen, GameState};
 
 #[derive(Component)]
 pub struct OnMenu;
@@ -26,9 +26,18 @@ fn menu_setup(mut commands: Commands, assets: Res<AssetServer>) {
     let font = assets.load::<Font, _>("fonts/OpenSans-Regular.ttf");
 
     let button_text_style = TextStyle {
-        font_size: 30.0,
+        font_size: 40.0,
         color: *colors::LIGHT_TEXT,
         font: font.clone(),
+    };
+
+    let button_style = Style {
+        margin: UiRect::all(Val::Px(20.0)),
+        size: Size::new(Val::Px(100.0), Val::Px(50.0)),
+        display: Display::Flex,
+        justify_content: JustifyContent::Center,
+        align_items: AlignItems::Center,
+        ..default()
     };
 
     commands
@@ -50,7 +59,7 @@ fn menu_setup(mut commands: Commands, assets: Res<AssetServer>) {
                 TextBundle::from_section(
                     "Test Menu",
                     TextStyle {
-                        font_size: 40.0,
+                        font_size: 60.0,
                         color: *colors::DARK_TEXT,
                         font,
                     },
@@ -63,10 +72,7 @@ fn menu_setup(mut commands: Commands, assets: Res<AssetServer>) {
             parent
                 .spawn((
                     ButtonBundle {
-                        style: Style {
-                            margin: UiRect::all(Val::Px(20.0)),
-                            ..default()
-                        },
+                        style: button_style.clone(),
                         background_color: (*colors::BUTTON_BACKGROUND).into(),
                         ..default()
                     },
@@ -78,10 +84,7 @@ fn menu_setup(mut commands: Commands, assets: Res<AssetServer>) {
             parent
                 .spawn((
                     ButtonBundle {
-                        style: Style {
-                            margin: UiRect::all(Val::Px(20.0)),
-                            ..default()
-                        },
+                        style: button_style.clone(),
                         background_color: (*colors::BUTTON_BACKGROUND).into(),
                         ..default()
                     },
