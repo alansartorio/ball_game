@@ -4,6 +4,13 @@ use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
+use nalgebra::Vector2;
+
+pub(crate) fn get_block_separations(columns: usize, rows: usize) -> Vector2<f64> {
+    let y = 1.0 / (rows as f64 + 1.0);
+    let x = 1.0 / (columns as f64 + 1.0);
+    Vector2::new(x, y)
+}
 
 pub(crate) fn get_block(columns: usize, rows: usize, x: usize, y: usize) -> ball_simulation::Block {
     let y = (1.0 + y as f64) / (rows as f64 + 1.0);

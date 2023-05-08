@@ -6,7 +6,7 @@ use simple_easing::cubic_out;
 use crate::despawn_screen;
 
 use super::{
-    utils::{add_blocks_from_state, get_block, Block},
+    utils::{add_blocks_from_state, get_block, get_block_separations, Block},
     BoardState, InnerGameState,
 };
 
@@ -109,14 +109,19 @@ fn animate(
     mut timer: Query<&mut AnimationTimer>,
     mut inner_game_state: ResMut<NextState<InnerGameState>>,
     mut blocks_parent: Query<&mut Transform, With<BlocksParent>>,
+    board_state: Query<&mut BoardState>,
 ) {
     timer.single_mut().0.tick(time.delta());
     let timer = &timer.single().0;
 
     let easing = cubic_out(timer.percent());
 
-    // TODO: remove hardcoded easing distance
-    blocks_parent.single_mut().translation.y = (1.0 - easing) * 1.0 / 11.0;
+    let movement = {
+        let [rows, columns]: [usize; 2] = board_state.single().blocks.shape().try_into().unwrap();
+        get_block_separations(columns, rows).y
+    };
+
+    blocks_parent.single_mut().translation.y = (1.0 - easing) * movement as f32;
 
     if timer.finished() {
         inner_game_state.set(InnerGameState::AcceptUserInput);
