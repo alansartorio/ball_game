@@ -12,12 +12,16 @@ members = [
 itertools = "0.10.5"
 nalgebra = "0.32.2"
 approx = "0.5.1"
+ndarray = "0.15.6"
+rand = "0.8.5"
 
 [dependencies]
 bevy = {git = "https://github.com/bevyengine/bevy.git"}
 ball_interpolator = { path = "crates/ball_interpolator" }
 ball_simulation = { path = "crates/ball_simulation" }
 nalgebra = { workspace = true }
+ndarray = { workspace = true }
+rand = { workspace = true }
 
 #[target.'cfg(target_os = "android")']
 [lib]
