@@ -56,6 +56,9 @@ struct BlockEntities(Vec<Entity>);
 struct BallEntities(Vec<Entity>);
 
 #[derive(Component)]
+struct BlocksParent;
+
+#[derive(Component)]
 struct BallMesh;
 
 #[derive(Component)]
@@ -95,7 +98,11 @@ fn add_simulation_state(
     ));
     let mut block_ids = BlockEntities::default();
     let blocks_parent = commands
-        .spawn((SpatialBundle::INHERITED_IDENTITY, OnPlaySimulation))
+        .spawn((
+            SpatialBundle::INHERITED_IDENTITY,
+            OnPlaySimulation,
+            BlocksParent,
+        ))
         .id();
     add_blocks_from_state(
         &simulation_state.blocks,
@@ -134,6 +141,8 @@ fn update_simulation(
     mut commands: Commands,
     ball_mesh: Query<&Mesh2dHandle, With<BallMesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    mut inner_game_state: ResMut<NextState<InnerGameState>>,
+    blocks_parent: Query<Entity, With<BlocksParent>>,
 ) {
     let time = time.single();
     let mut ball_ids = ball_ids.single_mut();
@@ -181,10 +190,15 @@ fn update_simulation(
                 simulation.state.balls.remove(ball);
             } else if let CollisionType::Block { index, .. } = against {
                 let entity_index = block_ids.0.remove(index);
+                commands.entity(blocks_parent.single()).remove_children(&[entity_index]);
                 commands.entity(entity_index).despawn();
                 simulation.state.blocks.remove(index);
             }
         }
+    }
+
+    if simulation.next.is_none() {
+        inner_game_state.set(InnerGameState::AnimateBlocksIn);
     }
 }
 

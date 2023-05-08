@@ -94,7 +94,7 @@ fn generate_graphic_blocks(
 
     commands.spawn((block_ids, OnAnimateBlocksIn));
 
-    commands.spawn(AnimationTimer(Timer::from_seconds(1.0, TimerMode::Once)));
+    commands.spawn((AnimationTimer(Timer::from_seconds(1.0, TimerMode::Once)), OnAnimateBlocksIn));
 }
 
 fn animate(
