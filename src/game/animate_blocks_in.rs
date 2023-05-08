@@ -18,7 +18,7 @@ impl Plugin for AnimateBlocksInPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(InnerGameState::AnimateBlocksIn),
-            (generate_new_blocks, generate_graphic_blocks),
+            (generate_new_blocks, generate_graphic_blocks.after(generate_new_blocks)),
         )
         .add_systems(
             Update,
@@ -39,6 +39,9 @@ struct BlockEntities(Vec<Entity>);
 
 #[derive(Component, Default)]
 struct BallEntities(Vec<Entity>);
+
+#[derive(Component, Default)]
+struct BlocksParent;
 
 fn generate_new_blocks(mut board_state: Query<&mut BoardState>) {
     let mut board_state = board_state.single_mut();
@@ -74,7 +77,11 @@ fn generate_graphic_blocks(
 
     let mut block_ids = BlockEntities::default();
     let blocks_parent = commands
-        .spawn((SpatialBundle::INHERITED_IDENTITY, OnAnimateBlocksIn))
+        .spawn((
+            SpatialBundle::INHERITED_IDENTITY,
+            BlocksParent,
+            OnAnimateBlocksIn,
+        ))
         .id();
     add_blocks_from_state(
         &blocks,
@@ -94,11 +101,15 @@ fn animate(
     time: Res<Time>,
     mut timer: Query<&mut AnimationTimer>,
     mut inner_game_state: ResMut<NextState<InnerGameState>>,
+    mut blocks_parent: Query<&mut Transform, With<BlocksParent>>,
 ) {
     timer.single_mut().0.tick(time.delta());
     let timer = &timer.single().0;
 
-    let remaining = timer.remaining_secs();
+    let easing = timer.percent_left();
+
+    // TODO: remove hardcoded easing distance
+    blocks_parent.single_mut().translation.y = easing * 1.0 / 11.0;
 
     if timer.finished() {
         inner_game_state.set(InnerGameState::PlaySimulation);
