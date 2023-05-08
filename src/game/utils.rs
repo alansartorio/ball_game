@@ -38,7 +38,7 @@ fn add_block(
     materials: &mut ResMut<Assets<ColorMaterial>>,
     block: ball_simulation::Block,
     parent: Entity,
-) {
+) -> Entity {
     let id = commands
         .spawn((
             MaterialMesh2dBundle {
@@ -62,6 +62,7 @@ fn add_block(
         .id();
     commands.entity(parent).push_children(&[id]);
     block_ids.push(id);
+    id
 }
 
 pub(crate) fn add_blocks_from_state(
@@ -71,20 +72,24 @@ pub(crate) fn add_blocks_from_state(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<ColorMaterial>>,
     parent: Entity,
-) {
+) -> Vec<Entity> {
     let block_mesh: Mesh2dHandle = meshes
         .add(shape::RegularPolygon::new(2f32.sqrt() / 2.0, 4).into())
         .into();
-    for block in blocks {
-        add_block(
-            commands,
-            block_ids,
-            block_mesh.clone(),
-            materials,
-            *block,
-            parent,
-        );
-    }
+
+    blocks
+        .iter()
+        .map(|block| {
+            add_block(
+                commands,
+                block_ids,
+                block_mesh.clone(),
+                materials,
+                *block,
+                parent,
+            )
+        })
+        .collect()
 }
 
 pub(crate) fn add_ball<State: Component>(

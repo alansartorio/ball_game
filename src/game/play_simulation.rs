@@ -1,4 +1,4 @@
-use super::utils::{add_ball, add_blocks_from_state, get_block, Ball};
+use super::utils::{add_ball, add_blocks_from_state, get_block, Ball, Block};
 use super::{BoardState, InnerGameState};
 use crate::{despawn_screen, GameState};
 use ball_simulation::SimulationState;
@@ -59,7 +59,7 @@ struct InterpolatedSimulation {
 struct BlockEntities(Vec<Entity>);
 
 #[derive(Component, Default)]
-struct BlockPositions(Vec<Vector2<usize>>);
+struct GridPosition(Vector2<usize>);
 
 #[derive(Component, Default)]
 struct BallEntities(Vec<Entity>);
@@ -81,18 +81,16 @@ fn add_simulation_state(
 ) {
     commands.spawn((SimulationWatch(Stopwatch::new()), OnPlaySimulation));
 
-    let mut block_positions = BlockPositions::default();
+    let mut block_positions = vec![];
     let mut blocks = vec![];
 
     let [h, w]: [usize; 2] = board_state.single().blocks.shape().try_into().unwrap();
     for ((y, x), &has_block) in board_state.single().blocks.indexed_iter() {
         if has_block {
             blocks.push(get_block(w, h, x, y));
-            block_positions.0.push(Vector2::new(x, y));
+            block_positions.push(Vector2::new(x, y));
         }
     }
-
-    commands.spawn((block_positions, OnPlaySimulation));
 
     let simulation_state = SimulationState {
         time: 0.0,
@@ -120,7 +118,7 @@ fn add_simulation_state(
             BlocksParent,
         ))
         .id();
-    add_blocks_from_state(
+    let block_entities = add_blocks_from_state(
         &simulation_state.blocks,
         &mut block_ids.0,
         &mut commands,
@@ -128,6 +126,9 @@ fn add_simulation_state(
         &mut materials,
         blocks_parent,
     );
+    for (block_entity, position) in block_entities.into_iter().zip(block_positions) {
+        commands.entity(block_entity).insert(GridPosition(position));
+    }
     commands.spawn((block_ids, OnPlaySimulation));
     let ball_ids = BallEntities::default();
     commands.spawn((ball_ids, OnPlaySimulation));
@@ -158,7 +159,6 @@ fn update_simulation(
     ball_mesh: Query<&Mesh2dHandle, With<BallMesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     blocks_parent: Query<Entity, With<BlocksParent>>,
-    mut block_positions: Query<&mut BlockPositions>,
 ) {
     let time = time.single();
     let mut ball_ids = ball_ids.single_mut();
@@ -209,7 +209,6 @@ fn update_simulation(
                 commands.entity(blocks_parent.single()).remove_children(&[entity_index]);
                 commands.entity(entity_index).despawn();
                 simulation.state.blocks.remove(index);
-                block_positions.single_mut().0.remove(index);
                 simulation.balls_increment += 1;
             }
         }
@@ -260,12 +259,11 @@ fn update_balls(
 }
 
 fn save_state(
-    block_positions: Query<&BlockPositions>,
+    block_positions: Query<&GridPosition, With<Block>>,
     mut board_state: Query<&mut BoardState>,
     simulation: Query<&Simulation>,
 ) {
     let simulation = simulation.single();
-    let block_positions = block_positions.single();
     let board_state = &mut board_state.single_mut();
 
     for has_block in board_state.blocks.iter_mut() {
@@ -273,7 +271,7 @@ fn save_state(
     }
 
     board_state.ball_count += simulation.balls_increment;
-    for block_position in &block_positions.0 {
-        board_state.blocks[(block_position.y, block_position.x)] = true;
+    for block_position in block_positions.iter() {
+        board_state.blocks[(block_position.0.y, block_position.0.x)] = true;
     }
 }
