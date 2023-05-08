@@ -43,6 +43,7 @@ impl Plugin for PlaySimulationPlugin {
 #[derive(Component)]
 struct Simulation {
     balls_left: usize,
+    balls_increment: usize,
     state: SimulationState,
     next: Option<(SimulationState, ball_simulation::Event<EventType>)>,
 }
@@ -103,6 +104,7 @@ fn add_simulation_state(
             state: simulation_state.clone(),
             next: None,
             balls_left: board_state.single().ball_count,
+            balls_increment: 0,
         },
         OnPlaySimulation,
     ));
@@ -205,6 +207,7 @@ fn update_simulation(
                 commands.entity(entity_index).despawn();
                 simulation.state.blocks.remove(index);
                 block_positions.single_mut().0.remove(index);
+                simulation.balls_increment += 1;
             }
         }
 
@@ -247,7 +250,12 @@ fn update_balls(
     }
 }
 
-fn save_state(block_positions: Query<&BlockPositions>, mut board_state: Query<&mut BoardState>) {
+fn save_state(
+    block_positions: Query<&BlockPositions>,
+    mut board_state: Query<&mut BoardState>,
+    simulation: Query<&Simulation>,
+) {
+    let simulation = simulation.single();
     let block_positions = block_positions.single();
     let board_state = &mut board_state.single_mut();
 
@@ -255,6 +263,7 @@ fn save_state(block_positions: Query<&BlockPositions>, mut board_state: Query<&m
         *has_block = false;
     }
 
+    board_state.ball_count += simulation.balls_increment;
     for block_position in &block_positions.0 {
         board_state.blocks[(block_position.y, block_position.x)] = true;
     }
