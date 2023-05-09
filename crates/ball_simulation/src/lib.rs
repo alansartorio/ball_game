@@ -1,6 +1,9 @@
+#![feature(assert_matches)]
 mod collision_finder;
 mod collision_primitives;
 mod collision_times;
+#[cfg(test)]
+mod tests;
 use nalgebra::Vector2;
 
 #[derive(Debug, Clone, Copy)]

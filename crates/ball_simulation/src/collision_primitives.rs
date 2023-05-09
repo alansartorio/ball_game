@@ -40,9 +40,17 @@ fn segment_ball_time(
 ) -> f64 {
     let ab = segment_b - segment_a;
 
-    (segment_a.x * (1.0 - alpha) + segment_b.x * alpha - ball.position.x
+    let x_time = (segment_a.x * (1.0 - alpha) + segment_b.x * alpha - ball.position.x
         + ball.radius / ab.magnitude() * (segment_b.y - segment_a.y))
-        / ball.velocity.x
+        / ball.velocity.x;
+
+    if !x_time.is_nan() {
+        x_time
+    } else {
+        (segment_a.y * (1.0 - alpha) + segment_b.y * alpha - ball.position.y
+            + ball.radius / ab.magnitude() * (segment_a.x - segment_b.x))
+            / ball.velocity.y
+    }
 }
 
 // Calculates collision point and time between a moving ball and a segment from segment_a to segment_b
