@@ -62,7 +62,7 @@ pub(crate) fn earliest_collision_ball_block(
     let bl = Vector2::new(min_x, min_y);
     let br = Vector2::new(max_x, min_y);
     let radius = (tl - center).magnitude();
-    ball_ball(
+    (ball_ball(
         ball,
         &Ball {
             position: center,
@@ -70,10 +70,13 @@ pub(crate) fn earliest_collision_ball_block(
             radius,
         },
     )
-    .and_then(|_| {
+    .is_some()
+        || (ball.position - center).magnitude_squared() <= radius.powi(2))
+    .then(|| {
         [[tr, tl], [tl, bl], [bl, br], [br, tr]]
             .into_iter()
             .filter_map(|[segment_a, segment_b]| segment_ball(segment_a, segment_b, ball))
             .min_by(|a, b| a.time.total_cmp(&b.time))
     })
+    .flatten()
 }
