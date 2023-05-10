@@ -15,6 +15,7 @@ approx = "0.5.1"
 ndarray = "0.15.6"
 rand = "0.8.5"
 simple-easing = "1.0.1"
+svg = "0.13.1"
 
 [dependencies]
 bevy = {git = "https://github.com/bevyengine/bevy.git"}

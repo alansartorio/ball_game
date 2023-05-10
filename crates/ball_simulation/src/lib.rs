@@ -90,6 +90,66 @@ impl SimulationState {
     }
 }
 
+#[cfg(feature = "svg")]
+mod svg_mod {
+    use super::SimulationState;
+    use svg::{
+        node::element::{Circle, Group, Path, Rectangle, path::Data},
+        Document,
+    };
+    impl SimulationState {
+        pub fn save_img(&self, document: Document, page: usize) -> Document {
+            let mut group = Group::new()
+                //.set("style", "display:none")
+                .set("inkscape:groupmode", "layer")
+                .set(
+                    "transform",
+                    format!("matrix(10, 0, 0, 10, {}, 0)", page * 20),
+                );
+
+            for ball in &self.balls {
+                group = group
+                    .add(
+                        Circle::new()
+                            .set("fill", "#ff681d")
+                            .set("stroke", "none")
+                            .set("r", ball.radius)
+                            .set("cx", ball.position.x)
+                            .set("cy", ball.position.y),
+                    )
+                    .add(
+                        Path::new()
+                            .set("fill", "none")
+                            .set("stroke", "black")
+                            .set("stroke-width", 0.005)
+                            .set(
+                                "d",
+                                Data::new()
+                                    .move_to((ball.position.x, ball.position.y))
+                                    .line_by((ball.velocity.x * 0.02, ball.velocity.y * 0.02)),
+                            ),
+                    );
+            }
+
+            for block in &self.blocks {
+                group = group.add(
+                    Rectangle::new()
+                        .set("fill", "#1a5fb4")
+                        .set("stroke", "none")
+                        .set("x", block.min_x)
+                        .set("y", block.min_y)
+                        .set("width", block.max_x - block.min_x)
+                        .set("height", block.max_y - block.min_y),
+                );
+            }
+
+            document.add(group)
+        }
+    }
+}
+#[cfg(feature = "svg")]
+pub use svg_mod::*;
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Event<T> {
     pub time: f64,
