@@ -71,7 +71,7 @@ pub(crate) fn earliest_collision_ball_block(
         },
     )
     .is_some()
-        || (ball.position - center).magnitude_squared() <= radius.powi(2))
+        || (ball.position - center).magnitude_squared() <= (radius + ball.radius).powi(2))
     .then(|| {
         [[tr, tl], [tl, bl], [bl, br], [br, tr]]
             .into_iter()
