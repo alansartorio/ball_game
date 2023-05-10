@@ -22,6 +22,7 @@ impl Plugin for PlaySimulationPlugin {
         .add_systems(
             Update,
             ((
+                touch_to_speed_up.before(update_watch),
                 update_watch.before(update_simulation),
                 update_simulation,
                 handle_stop.after(update_simulation),
@@ -48,6 +49,7 @@ struct Simulation {
     spawn_direction: Vector2<f64>,
     state: SimulationState,
     next: Option<(SimulationState, ball_simulation::Event<EventType>)>,
+    speed: f64,
 }
 
 #[derive(Component)]
@@ -107,6 +109,7 @@ fn add_simulation_state(
             balls_left: board_state.single().ball_count,
             balls_increment: 0,
             spawn_direction: board_state.single().direction,
+            speed: 1.0,
         },
         OnPlaySimulation,
     ));
@@ -147,8 +150,25 @@ fn add_simulation_state(
     ));
 }
 
-fn update_watch(time: Res<Time>, mut watch: Query<&mut SimulationWatch>) {
-    watch.single_mut().0.tick(time.delta());
+fn touch_to_speed_up(
+    mut simulation: Query<&mut Simulation>,
+    buttons: Res<Input<MouseButton>>,
+    touches: Res<Touches>,
+) {
+    if buttons.just_released(MouseButton::Left) || touches.any_just_released() {
+        simulation.single_mut().speed *= 1.2;
+    }
+}
+
+fn update_watch(
+    simulation: Query<&Simulation>,
+    time: Res<Time>,
+    mut watch: Query<&mut SimulationWatch>,
+) {
+    watch
+        .single_mut()
+        .0
+        .tick(time.delta().mul_f64(simulation.single().speed));
 }
 
 fn update_simulation(
