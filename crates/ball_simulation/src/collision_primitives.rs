@@ -79,13 +79,13 @@ pub(crate) fn segment_ball(
                 data: segment_b,
             })
         } else if signed_distance > ball.radius - CLEARANCE {
-            if normal_velocity < 0.0 {
+            if normal_velocity >= 0.0 {
+                None
+            } else {
                 Some(Event {
                     time: 0.0,
                     data: segment_a + ab_proj * ab,
                 })
-            } else {
-                None
             }
         } else {
             panic!("already in collision");
@@ -102,6 +102,8 @@ pub(crate) fn segment_ball(
                 time,
                 data: segment_b,
             })
+        } else if normal_velocity >= 0.0 {
+            None
         } else {
             let time = segment_ball_time(segment_a, segment_b, ball, alpha);
             Some(Event {
