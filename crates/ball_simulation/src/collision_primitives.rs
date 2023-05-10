@@ -1,3 +1,4 @@
+use approx::AbsDiffEq;
 use nalgebra::Vector2;
 
 use crate::{Ball, Event};
@@ -40,18 +41,18 @@ fn segment_ball_time(
 ) -> f64 {
     let ab = segment_b - segment_a;
 
-    let x_time = (segment_a.x * (1.0 - alpha) + segment_b.x * alpha - ball.position.x
-        + ball.radius / ab.magnitude() * (segment_b.y - segment_a.y))
-        / ball.velocity.x;
-
-    if !x_time.is_nan() {
-        x_time
+    if ball.velocity.x.abs() > ball.velocity.y.abs() {
+        (segment_a.x * (1.0 - alpha) + segment_b.x * alpha - ball.position.x
+            + ball.radius / ab.magnitude() * (segment_b.y - segment_a.y))
+            / ball.velocity.x
     } else {
         (segment_a.y * (1.0 - alpha) + segment_b.y * alpha - ball.position.y
             + ball.radius / ab.magnitude() * (segment_a.x - segment_b.x))
             / ball.velocity.y
     }
 }
+
+const CLEARANCE: f64 = 0.0001;
 
 // Calculates collision point and time between a moving ball and a segment from segment_a to segment_b
 pub(crate) fn segment_ball(
@@ -62,7 +63,8 @@ pub(crate) fn segment_ball(
     let ab = segment_b - segment_a;
     let ab_mag = ab.magnitude();
     let signed_distance = (ball.position - segment_a).perp(&ab) / ab_mag;
-    if signed_distance < 0.0 {
+    let normal_velocity = ball.velocity.perp(&ab) / ab_mag;
+    if signed_distance < -CLEARANCE {
         None
     } else if signed_distance < ball.radius {
         let ab_proj = (ball.position - segment_a).dot(&ab) / ab_mag.powi(2);
@@ -76,6 +78,15 @@ pub(crate) fn segment_ball(
                 time,
                 data: segment_b,
             })
+        } else if signed_distance > ball.radius - CLEARANCE {
+            if normal_velocity < 0.0 {
+                Some(Event {
+                    time: 0.0,
+                    data: segment_a + ab_proj * ab,
+                })
+            } else {
+                None
+            }
         } else {
             panic!("already in collision");
         }
