@@ -94,18 +94,26 @@ impl SimulationState {
 mod svg_mod {
     use super::SimulationState;
     use svg::{
-        node::element::{Circle, Group, Path, Rectangle, path::Data},
+        node::element::{path::Data, Circle, Group, Path, Rectangle},
         Document,
     };
     impl SimulationState {
         pub fn save_img(&self, document: Document, page: usize) -> Document {
-            let mut group = Group::new()
-                //.set("style", "display:none")
-                .set("inkscape:groupmode", "layer")
-                .set(
-                    "transform",
-                    format!("matrix(10, 0, 0, 10, {}, 0)", page * 20),
-                );
+            let mut group = Group::new().set("inkscape:groupmode", "layer").set(
+                "transform",
+                format!("matrix(10, 0, 0, -10, {}, 10)", page * 11),
+            );
+
+            group = group.add(
+                Rectangle::new()
+                    .set("fill", "none")
+                    .set("stroke", "black")
+                    .set("stroke-width", 0.001)
+                    .set("x", 0)
+                    .set("y", 0)
+                    .set("width", 1)
+                    .set("height", 1),
+            );
 
             for ball in &self.balls {
                 group = group
@@ -131,7 +139,7 @@ mod svg_mod {
                     );
             }
 
-            for block in &self.blocks {
+            for (i, block) in self.blocks.iter().enumerate() {
                 group = group.add(
                     Rectangle::new()
                         .set("fill", "#1a5fb4")
@@ -139,7 +147,8 @@ mod svg_mod {
                         .set("x", block.min_x)
                         .set("y", block.min_y)
                         .set("width", block.max_x - block.min_x)
-                        .set("height", block.max_y - block.min_y),
+                        .set("height", block.max_y - block.min_y)
+                        .set("id", i),
                 );
             }
 
