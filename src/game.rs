@@ -52,9 +52,14 @@ impl Plugin for GamePlugin {
             .add_plugin(AnimateBlocksInPlugin)
             .add_plugin(AcceptUserInputPlugin)
             .add_plugin(PlaySimulationPlugin)
+            .add_systems(Update, escape_to_menu.run_if(in_state(GameState::Game)))
+            .add_systems(OnEnter(InnerGameState::Inactive), on_inactive)
             .add_systems(
                 OnExit(GameState::Game),
-                (despawn_screen::<OnGame>, set_inactive_game_state),
+                (
+                    set_inactive_game_state,
+                    despawn_screen::<OnGame>.after(set_inactive_game_state),
+                ),
             );
     }
 }
@@ -101,6 +106,19 @@ fn initialize_camera(mut commands: Commands) {
     };
     camera.projection.scale = 0.002;
     commands.spawn((camera, OnGame));
+}
+
+fn escape_to_menu(
+    mut inner_game_state: ResMut<NextState<InnerGameState>>,
+    keyboard: Res<Input<KeyCode>>,
+) {
+    if keyboard.just_pressed(KeyCode::Escape) {
+        inner_game_state.set(InnerGameState::Inactive);
+    }
+}
+
+fn on_inactive(mut game_state: ResMut<NextState<GameState>>) {
+    game_state.set(GameState::Menu);
 }
 
 fn set_inactive_game_state(mut inner_game_state: ResMut<NextState<InnerGameState>>) {
