@@ -1,4 +1,3 @@
-use approx::AbsDiffEq;
 use nalgebra::Vector2;
 
 use crate::{Ball, Event};
