@@ -46,6 +46,7 @@ impl Plugin for PlaySimulationPlugin {
 struct Simulation {
     balls_left: usize,
     balls_increment: usize,
+    launcher_position: f64,
     spawn_direction: Vector2<f64>,
     state: SimulationState,
     next: Option<(SimulationState, ball_simulation::Event<EventType>)>,
@@ -110,6 +111,7 @@ fn add_simulation_state(
             balls_increment: 0,
             spawn_direction: board_state.single().direction,
             speed: 1.0,
+            launcher_position: board_state.single().launcher_position,
         },
         OnPlaySimulation,
     ));
@@ -210,8 +212,9 @@ fn update_simulation(
 
         if let EventType::Custom = next_event.data {
             let spawn_direction = simulation.spawn_direction;
+            let launcher_position = simulation.launcher_position;
             simulation.state.balls.push(ball_simulation::Ball {
-                position: Vector2::new(0.5, 0.0),
+                position: Vector2::new(launcher_position, 0.0),
                 velocity: spawn_direction * 2.0,
                 radius: 0.02,
             });

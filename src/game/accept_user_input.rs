@@ -81,7 +81,7 @@ fn generate_graphic_blocks(
         .spawn((
             SpatialBundle {
                 visibility: Visibility::Hidden,
-                transform: Transform::from_xyz(0.5, 0.0, -0.5),
+                transform: Transform::from_xyz(board_state.single().launcher_position as f32, 0.0, -0.5),
                 ..default()
             },
             AimIndicator::default(),
